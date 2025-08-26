@@ -1,0 +1,128 @@
+package generator
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"ones-cfg2md/pkg/model"
+)
+
+// MarkdownGenerator генератор Markdown файлов
+type MarkdownGenerator struct {
+	outputPath string
+}
+
+// NewMarkdownGenerator создает новый генератор Markdown
+func NewMarkdownGenerator(outputPath string) *MarkdownGenerator {
+	return &MarkdownGenerator{
+		outputPath: outputPath,
+	}
+}
+
+// GenerateFiles генерирует Markdown файлы для всех объектов
+func (g *MarkdownGenerator) GenerateFiles(objects []model.MetadataObject) error {
+	// Создаем выходной каталог, если он не существует
+	if err := os.MkdirAll(g.outputPath, 0755); err != nil {
+		return fmt.Errorf("ошибка создания выходного каталога %s: %w", g.outputPath, err)
+	}
+	
+	for _, obj := range objects {
+		if err := g.generateFile(obj); err != nil {
+			return fmt.Errorf("ошибка генерации файла для объекта %s: %w", obj.Name, err)
+		}
+	}
+	
+	return nil
+}
+
+// generateFile генерирует Markdown файл для одного объекта
+func (g *MarkdownGenerator) generateFile(obj model.MetadataObject) error {
+	// Формируем имя файла
+	fileName := g.getFileName(obj)
+	filePath := filepath.Join(g.outputPath, fileName)
+	
+	// Генерируем содержимое
+	content := g.generateContent(obj)
+	
+	// Записываем файл
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		return fmt.Errorf("ошибка записи файла %s: %w", filePath, err)
+	}
+	
+	return nil
+}
+
+// getFileName формирует имя файла для объекта
+func (g *MarkdownGenerator) getFileName(obj model.MetadataObject) string {
+	return fmt.Sprintf("%s_%s.md", g.getObjectTypeRussian(obj.Type), obj.Name)
+}
+
+// getObjectTypeRussian возвращает русское название типа объекта
+func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) string {
+	switch objType {
+	case model.ObjectTypeDocument:
+		return "Документ"
+	case model.ObjectTypeCatalog:
+		return "Справочник"
+	case model.ObjectTypeEnum:
+		return "Перечисление"
+	case model.ObjectTypeChartOfCharacteristicTypes:
+		return "ПланВидовХарактеристик"
+	default:
+		return string(objType)
+	}
+}
+
+// generateContent генерирует содержимое Markdown файла
+func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
+	var content strings.Builder
+	
+	// Заголовок
+	typeRussian := g.getObjectTypeRussian(obj.Type)
+	content.WriteString(fmt.Sprintf("# %s: %s", typeRussian, obj.Name))
+	if obj.Synonym != "" {
+		content.WriteString(fmt.Sprintf(" (%s)", obj.Synonym))
+	}
+	content.WriteString("\n\n")
+	
+    // Реквизиты / Реквизиты шапки
+    if len(obj.Attributes) > 0 {
+        // Для справочников выводим заголовок как в образце: "Реквизиты"
+        // Для остальных типов оставляем "Реквизиты шапки"
+        if obj.Type == model.ObjectTypeCatalog {
+            content.WriteString("## Реквизиты\n\n")
+        } else {
+            content.WriteString("## Реквизиты шапки\n\n")
+        }
+
+        for _, attr := range obj.Attributes {
+            typesStr := strings.Join(attr.Types, ", ")
+            content.WriteString(fmt.Sprintf("- %s (%s)\n", attr.Name, typesStr))
+        }
+        content.WriteString("\n")
+    }
+	
+	// Табличные части
+	if len(obj.TabularSections) > 0 {
+		content.WriteString("## Табличные части\n\n")
+		for _, ts := range obj.TabularSections {
+			// Заголовок табличной части
+			content.WriteString(fmt.Sprintf("### %s", ts.Name))
+			if ts.Synonym != "" {
+				content.WriteString(fmt.Sprintf(" (%s)", ts.Synonym))
+			}
+			content.WriteString("\n\n")
+			
+			// Атрибуты табличной части
+			for _, attr := range ts.Attributes {
+				typesStr := strings.Join(attr.Types, ", ")
+				content.WriteString(fmt.Sprintf("- %s (%s)\n", attr.Name, typesStr))
+			}
+			content.WriteString("\n")
+		}
+	}
+	
+	return content.String()
+}

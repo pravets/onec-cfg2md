@@ -13,6 +13,9 @@ type MetadataParser interface {
 	
 	// ParseCatalogs парсит все справочники в конфигурации
 	ParseCatalogs() ([]model.MetadataObject, error)
+    
+    // ParseAccumulationRegisters парсит все регистры накопления
+    ParseAccumulationRegisters() ([]model.MetadataObject, error)
 	
 	// ParseEnums парсит все перечисления в конфигурации
 	ParseEnums() ([]model.MetadataObject, error)

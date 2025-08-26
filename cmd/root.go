@@ -34,6 +34,7 @@ var rootCmd = &cobra.Command{
 Поддерживаемые типы объектов:
   - documents (документы)
   - catalogs (справочники) 
+  - accumulationregisters (регистры накопления)
   - enums (перечисления)
   - charts (планы видов характеристик)`,
 	Args: cobra.ExactArgs(2),
@@ -50,8 +51,8 @@ func init() {
 	rootCmd.Flags().StringVar(&formatFlag, "format", "", 
 		"Принудительное указание формата (cfg/edt), по умолчанию автоопределение")
 	
-    rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs", 
-        "Типы объектов для обработки, разделенные запятыми (documents,catalogs,enums,charts)")
+    rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters", 
+        "Типы объектов для обработки, разделенные запятыми (documents,catalogs,accumulationregisters,enums,charts)")
 	
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, 
 		"Подробный вывод процесса обработки")
@@ -138,6 +139,8 @@ func parseObjectTypes(typesStr string) ([]model.ObjectType, error) {
 			objectTypes = append(objectTypes, model.ObjectTypeDocument)
 		case "catalogs":
 			objectTypes = append(objectTypes, model.ObjectTypeCatalog)
+        case "accumulationregisters":
+            objectTypes = append(objectTypes, model.ObjectTypeAccumulationRegister)
 		case "enums":
 			objectTypes = append(objectTypes, model.ObjectTypeEnum)
 		case "charts":

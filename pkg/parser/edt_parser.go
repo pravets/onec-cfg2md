@@ -42,6 +42,16 @@ type EDTCatalog struct {
 	TabularSections   []EDTTabularSection `xml:"tabularSections"`
 }
 
+// EDTAccumulationRegister структура для парсинга EDT регистра накопления
+type EDTAccumulationRegister struct {
+    XMLName     xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass AccumulationRegister"`
+    Name        string              `xml:"name"`
+    Synonym     EDTSynonym          `xml:"synonym"`
+    Dimensions  []EDTAttribute      `xml:"dimensions"`
+    Resources   []EDTAttribute      `xml:"resources"`
+    Attributes  []EDTAttribute      `xml:"attributes"`
+}
+
 // EDTSynonym синоним в EDT формате
 type EDTSynonym struct {
 	Key   string `xml:"key"`
@@ -207,6 +217,75 @@ func (p *EDTParser) ParseCatalogs() ([]model.MetadataObject, error) {
 	return catalogs, nil
 }
 
+// ParseAccumulationRegisters парсит все регистры накопления в EDT формате
+func (p *EDTParser) ParseAccumulationRegisters() ([]model.MetadataObject, error) {
+    regsPath := filepath.Join(p.sourcePath, "src", "AccumulationRegisters")
+    if _, err := os.Stat(regsPath); os.IsNotExist(err) {
+        return []model.MetadataObject{}, nil
+    }
+    entries, err := ioutil.ReadDir(regsPath)
+    if err != nil {
+        return nil, fmt.Errorf("ошибка чтения каталога регистров накопления: %w", err)
+    }
+    var regs []model.MetadataObject
+    for _, entry := range entries {
+        if !entry.IsDir() { continue }
+        name := entry.Name()
+        mdoFile := filepath.Join(regsPath, name, name+".mdo")
+        if _, err := os.Stat(mdoFile); os.IsNotExist(err) { continue }
+        reg, perr := p.parseAccumulationRegisterFile(mdoFile)
+        if perr != nil {
+            fmt.Printf("Предупреждение: ошибка парсинга регистра %s: %v\n", name, perr)
+            continue
+        }
+        regs = append(regs, reg)
+    }
+    return regs, nil
+}
+
+// parseAccumulationRegisterFile парсит отдельный MDO файл регистра накопления
+func (p *EDTParser) parseAccumulationRegisterFile(filePath string) (model.MetadataObject, error) {
+    data, err := ioutil.ReadFile(filePath)
+    if err != nil { return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err) }
+    var edtReg EDTAccumulationRegister
+    if err := xml.Unmarshal(data, &edtReg); err != nil {
+        return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
+    }
+    reg := model.MetadataObject{
+        Type:    model.ObjectTypeAccumulationRegister,
+        Name:    edtReg.Name,
+        Synonym: edtReg.Synonym.Value,
+    }
+    // Измерения
+    for _, d := range edtReg.Dimensions {
+        converted := p.typeConverter.ConvertTypes(d.Type.Types)
+        reg.Dimensions = append(reg.Dimensions, model.Attribute{
+            Name:    d.Name,
+            Synonym: d.Synonym.Value,
+            Types:   converted,
+        })
+    }
+    // Ресурсы
+    for _, r := range edtReg.Resources {
+        converted := p.typeConverter.ConvertTypes(r.Type.Types)
+        reg.Resources = append(reg.Resources, model.Attribute{
+            Name:    r.Name,
+            Synonym: r.Synonym.Value,
+            Types:   converted,
+        })
+    }
+    // Реквизиты
+    for _, a := range edtReg.Attributes {
+        converted := p.typeConverter.ConvertTypes(a.Type.Types)
+        reg.Attributes = append(reg.Attributes, model.Attribute{
+            Name:    a.Name,
+            Synonym: a.Synonym.Value,
+            Types:   converted,
+        })
+    }
+    return reg, nil
+}
+
 // parseCatalogFile парсит отдельный MDO файл справочника
 func (p *EDTParser) parseCatalogFile(filePath string) (model.MetadataObject, error) {
 	// Читаем файл
@@ -290,6 +369,12 @@ func (p *EDTParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, catalogs...)
+        case model.ObjectTypeAccumulationRegister:
+            regs, err := p.ParseAccumulationRegisters()
+            if err != nil {
+                return nil, err
+            }
+            allObjects = append(allObjects, regs...)
 			
 		case model.ObjectTypeEnum:
 			enums, err := p.ParseEnums()

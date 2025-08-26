@@ -70,6 +70,9 @@ type CFGSynonymItem struct {
 type CFGChildObjects struct {
     Attributes      []CFGAttribute      `xml:"http://v8.1c.ru/8.3/MDClasses Attribute"`
     TabularSections []CFGTabularSection `xml:"http://v8.1c.ru/8.3/MDClasses TabularSection"`
+    // Для регистров накопления
+    Dimensions      []CFGAttribute      `xml:"http://v8.1c.ru/8.3/MDClasses Dimension"`
+    Resources       []CFGAttribute      `xml:"http://v8.1c.ru/8.3/MDClasses Resource"`
 }
 
 // CFGAttribute атрибут в CFG формате
@@ -388,6 +391,12 @@ func (p *CFGParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, catalogs...)
+        case model.ObjectTypeAccumulationRegister:
+            regs, err := p.ParseAccumulationRegisters()
+            if err != nil {
+                return nil, err
+            }
+            allObjects = append(allObjects, regs...)
 			
 		case model.ObjectTypeEnum:
 			enums, err := p.ParseEnums()
@@ -406,4 +415,88 @@ func (p *CFGParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 	}
 	
 	return allObjects, nil
+}
+
+// ParseAccumulationRegisters парсит регистры накопления в CFG формате
+func (p *CFGParser) ParseAccumulationRegisters() ([]model.MetadataObject, error) {
+    regsPath := filepath.Join(p.sourcePath, "AccumulationRegisters")
+    if _, err := os.Stat(regsPath); os.IsNotExist(err) {
+        return []model.MetadataObject{}, nil
+    }
+    var regs []model.MetadataObject
+    err := filepath.Walk(regsPath, func(path string, info os.FileInfo, err error) error {
+        if err != nil { return err }
+        if !info.IsDir() && strings.HasSuffix(strings.ToLower(info.Name()), ".xml") {
+            reg, perr := p.parseAccumulationRegisterFile(path)
+            if perr != nil {
+                fmt.Printf("Предупреждение: ошибка парсинга регистра %s: %v\n", path, perr)
+                return nil
+            }
+            regs = append(regs, reg)
+        }
+        return nil
+    })
+    if err != nil {
+        return nil, fmt.Errorf("ошибка сканирования регистров накопления: %w", err)
+    }
+    return regs, nil
+}
+
+// parseAccumulationRegisterFile парсит один XML файл регистра накопления
+func (p *CFGParser) parseAccumulationRegisterFile(filePath string) (model.MetadataObject, error) {
+    data, err := ioutil.ReadFile(filePath)
+    if err != nil { return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err) }
+
+    // Определяем корень по пространству имен так же, как и для других объектов
+    type cfgRegContent struct {
+        Properties   CFGProperties    `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+        ChildObjects CFGChildObjects  `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
+    }
+    type cfgReg struct {
+        XMLName   xml.Name            `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
+        Register  cfgRegContent       `xml:"http://v8.1c.ru/8.3/MDClasses AccumulationRegister"`
+    }
+
+    var reg cfgReg
+    if err := xml.Unmarshal(data, &reg); err != nil {
+        return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
+    }
+
+    result := model.MetadataObject{
+        Type:    model.ObjectTypeAccumulationRegister,
+        Name:    reg.Register.Properties.Name,
+        Synonym: p.extractSynonym(reg.Register.Properties.Synonym),
+    }
+
+    // Измерения
+    for _, d := range reg.Register.ChildObjects.Dimensions {
+        types := p.extractTypes(d.Properties.Type)
+        converted := p.typeConverter.ConvertTypes(types)
+        result.Dimensions = append(result.Dimensions, model.Attribute{
+            Name:    d.Properties.Name,
+            Synonym: p.extractSynonym(d.Properties.Synonym),
+            Types:   converted,
+        })
+    }
+    // Ресурсы
+    for _, r := range reg.Register.ChildObjects.Resources {
+        types := p.extractTypes(r.Properties.Type)
+        converted := p.typeConverter.ConvertTypes(types)
+        result.Resources = append(result.Resources, model.Attribute{
+            Name:    r.Properties.Name,
+            Synonym: p.extractSynonym(r.Properties.Synonym),
+            Types:   converted,
+        })
+    }
+    // Реквизиты
+    for _, a := range reg.Register.ChildObjects.Attributes {
+        types := p.extractTypes(a.Properties.Type)
+        converted := p.typeConverter.ConvertTypes(types)
+        result.Attributes = append(result.Attributes, model.Attribute{
+            Name:    a.Properties.Name,
+            Synonym: p.extractSynonym(a.Properties.Synonym),
+            Types:   converted,
+        })
+    }
+    return result, nil
 }

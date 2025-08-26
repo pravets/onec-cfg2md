@@ -5,8 +5,12 @@ type MetadataObject struct {
 	Type       ObjectType      `json:"type"`
 	Name       string          `json:"name"`
 	Synonym    string          `json:"synonym"`
-	Attributes []Attribute     `json:"attributes"`
-	TabularSections []TabularSection `json:"tabular_sections"`
+    // Для документов и справочников
+    Attributes []Attribute     `json:"attributes"`
+    TabularSections []TabularSection `json:"tabular_sections"`
+    // Для регистров накопления
+    Dimensions []Attribute     `json:"dimensions"`
+    Resources  []Attribute     `json:"resources"`
 }
 
 // ObjectType определяет тип объекта метаданных
@@ -17,6 +21,7 @@ const (
 	ObjectTypeCatalog                ObjectType = "Catalog"
 	ObjectTypeEnum                   ObjectType = "Enum"
 	ObjectTypeChartOfCharacteristicTypes ObjectType = "ChartOfCharacteristicTypes"
+    ObjectTypeAccumulationRegister   ObjectType = "AccumulationRegister"
 )
 
 // Attribute представляет реквизит объекта

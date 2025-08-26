@@ -66,6 +66,8 @@ func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) strin
 		return "Документ"
 	case model.ObjectTypeCatalog:
 		return "Справочник"
+    case model.ObjectTypeAccumulationRegister:
+        return "Регистр накопления"
 	case model.ObjectTypeEnum:
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:
@@ -87,16 +89,43 @@ func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
 	}
 	content.WriteString("\n\n")
 	
+    // Для регистров накопления: Измерения, Ресурсы, Реквизиты
+    if obj.Type == model.ObjectTypeAccumulationRegister {
+        if len(obj.Dimensions) > 0 {
+            content.WriteString("## Измерения\n\n")
+            for _, d := range obj.Dimensions {
+                typesStr := strings.Join(d.Types, ", ")
+                content.WriteString(fmt.Sprintf("- %s (%s)\n", d.Name, typesStr))
+            }
+            content.WriteString("\n")
+        }
+        if len(obj.Resources) > 0 {
+            content.WriteString("## Ресурсы\n\n")
+            for _, r := range obj.Resources {
+                typesStr := strings.Join(r.Types, ", ")
+                content.WriteString(fmt.Sprintf("- %s (%s)\n", r.Name, typesStr))
+            }
+            content.WriteString("\n")
+        }
+        // Реквизиты регистра
+        if len(obj.Attributes) > 0 {
+            content.WriteString("## Реквизиты\n\n")
+            for _, a := range obj.Attributes {
+                typesStr := strings.Join(a.Types, ", ")
+                content.WriteString(fmt.Sprintf("- %s (%s)\n", a.Name, typesStr))
+            }
+            content.WriteString("\n")
+        }
+        return content.String()
+    }
+
     // Реквизиты / Реквизиты шапки
     if len(obj.Attributes) > 0 {
-        // Для справочников выводим заголовок как в образце: "Реквизиты"
-        // Для остальных типов оставляем "Реквизиты шапки"
         if obj.Type == model.ObjectTypeCatalog {
             content.WriteString("## Реквизиты\n\n")
         } else {
             content.WriteString("## Реквизиты шапки\n\n")
         }
-
         for _, attr := range obj.Attributes {
             typesStr := strings.Join(attr.Types, ", ")
             content.WriteString(fmt.Sprintf("- %s (%s)\n", attr.Name, typesStr))

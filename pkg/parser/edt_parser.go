@@ -417,7 +417,81 @@ func (p *EDTParser) ParseEnums() ([]model.MetadataObject, error) {
 
 // ParseChartsOfCharacteristicTypes парсит планы видов характеристик (заглушка для MVP)
 func (p *EDTParser) ParseChartsOfCharacteristicTypes() ([]model.MetadataObject, error) {
-	return []model.MetadataObject{}, nil
+	chartsPath := filepath.Join(p.sourcePath, "src", "ChartsOfCharacteristicTypes")
+	if _, err := os.Stat(chartsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	entries, err := os.ReadDir(chartsPath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения каталога планов видов характеристик: %w", err)
+	}
+
+	var charts []model.MetadataObject
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		mdoFile := filepath.Join(chartsPath, name, name+".mdo")
+		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
+			continue
+		}
+		data, rerr := os.ReadFile(mdoFile)
+		if rerr != nil {
+			fmt.Printf("Предупреждение: ошибка чтения файла плана %s: %v\n", mdoFile, rerr)
+			continue
+		}
+
+		type EDTChart struct {
+			XMLName       xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass ChartOfCharacteristicTypes"`
+			Name          string              `xml:"name"`
+			Synonym       EDTSynonym          `xml:"synonym"`
+			Attributes    []EDTAttribute      `xml:"attributes"`
+			TabularSections []EDTTabularSection `xml:"tabularSections"`
+		}
+
+		var ec EDTChart
+		if err := xml.Unmarshal(data, &ec); err != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга плана %s: %v\n", mdoFile, err)
+			continue
+		}
+
+		obj := model.MetadataObject{
+			Type:    model.ObjectTypeChartOfCharacteristicTypes,
+			Name:    ec.Name,
+			Synonym: ec.Synonym.Value,
+		}
+
+		for _, attr := range ec.Attributes {
+			converted := p.typeConverter.ConvertTypes(attr.Type.Types)
+			obj.Attributes = append(obj.Attributes, model.Attribute{
+				Name:    attr.Name,
+				Synonym: attr.Synonym.Value,
+				Types:   converted,
+			})
+		}
+
+		for _, ts := range ec.TabularSections {
+			tab := model.TabularSection{
+				Name:    ts.Name,
+				Synonym: ts.Synonym.Value,
+			}
+			for _, a := range ts.Attributes {
+				converted := p.typeConverter.ConvertTypes(a.Type.Types)
+				tab.Attributes = append(tab.Attributes, model.Attribute{
+					Name:    a.Name,
+					Synonym: a.Synonym.Value,
+					Types:   converted,
+				})
+			}
+			obj.TabularSections = append(obj.TabularSections, tab)
+		}
+
+		charts = append(charts, obj)
+	}
+
+	return charts, nil
 }
 
 // ParseInformationRegisters парсит все регистры сведений в EDT формате

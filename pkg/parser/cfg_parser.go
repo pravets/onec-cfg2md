@@ -433,7 +433,89 @@ func (p *CFGParser) ParseEnums() ([]model.MetadataObject, error) {
 
 // ParseChartsOfCharacteristicTypes парсит планы видов характеристик (заглушка для MVP)
 func (p *CFGParser) ParseChartsOfCharacteristicTypes() ([]model.MetadataObject, error) {
-	return []model.MetadataObject{}, nil
+	chartsPath := filepath.Join(p.sourcePath, "ChartsOfCharacteristicTypes")
+	if _, err := os.Stat(chartsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	var charts []model.MetadataObject
+
+	err := filepath.Walk(chartsPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(strings.ToLower(info.Name()), ".xml") {
+			return nil
+		}
+
+		data, rerr := ioutil.ReadFile(path)
+		if rerr != nil {
+			fmt.Printf("Предупреждение: ошибка чтения файла плана %s: %v\n", path, rerr)
+			return nil
+		}
+
+		type cfgChart struct {
+			XMLName xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
+			Chart   struct {
+				Properties CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+				ChildObjects struct {
+					Attributes []CFGAttribute `xml:"http://v8.1c.ru/8.3/MDClasses Attribute"`
+					TabularSections []struct {
+						Properties CFGTabularSectionProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+						ChildObjects CFGTabularSectionChilds  `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
+					} `xml:"http://v8.1c.ru/8.3/MDClasses TabularSection"`
+				} `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
+			} `xml:"http://v8.1c.ru/8.3/MDClasses ChartOfCharacteristicTypes"`
+		}
+
+		var cc cfgChart
+		if err := xml.Unmarshal(data, &cc); err != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга плана %s: %v\n", path, err)
+			return nil
+		}
+
+		obj := model.MetadataObject{
+			Type:    model.ObjectTypeChartOfCharacteristicTypes,
+			Name:    cc.Chart.Properties.Name,
+			Synonym: p.extractSynonym(cc.Chart.Properties.Synonym),
+		}
+
+		for _, a := range cc.Chart.ChildObjects.Attributes {
+			types := p.extractTypes(a.Properties.Type)
+			converted := p.typeConverter.ConvertTypes(types)
+			obj.Attributes = append(obj.Attributes, model.Attribute{
+				Name:    a.Properties.Name,
+				Synonym: p.extractSynonym(a.Properties.Synonym),
+				Types:   converted,
+			})
+		}
+
+		for _, ts := range cc.Chart.ChildObjects.TabularSections {
+			tab := model.TabularSection{
+				Name:    ts.Properties.Name,
+				Synonym: p.extractSynonym(ts.Properties.Synonym),
+			}
+			for _, a := range ts.ChildObjects.Attributes {
+				types := p.extractTypes(a.Properties.Type)
+				converted := p.typeConverter.ConvertTypes(types)
+				tab.Attributes = append(tab.Attributes, model.Attribute{
+					Name:    a.Properties.Name,
+					Synonym: p.extractSynonym(a.Properties.Synonym),
+					Types:   converted,
+				})
+			}
+			obj.TabularSections = append(obj.TabularSections, tab)
+		}
+
+		charts = append(charts, obj)
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("ошибка сканирования каталога планов видов характеристик: %w", err)
+	}
+
+	return charts, nil
 }
 
 // ParseObjectsByType парсит объекты указанных типов

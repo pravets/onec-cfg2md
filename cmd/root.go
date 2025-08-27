@@ -35,9 +35,9 @@ var rootCmd = &cobra.Command{
   - documents (документы)
   - catalogs (справочники) 
   - accumulationregisters (регистры накопления)
-  - informationationregisters (регистры сведений)
+  - informationregisters (регистры сведений)
   - enums (перечисления)
-  - charts (планы видов характеристик)`,
+  - chartsofcharacteristictypes (планы видов характеристик)`,
 	Args: cobra.ExactArgs(2),
 	Run:  runConversion,
 }
@@ -52,8 +52,8 @@ func init() {
 	rootCmd.Flags().StringVar(&formatFlag, "format", "", 
 		"Принудительное указание формата (cfg/edt), по умолчанию автоопределение")
 	
-    rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters,informationationregisters,enums", 
-        "Типы объектов для обработки, разделенные запятыми (documents,catalogs,accumulationregisters,informationationregisters,enums,charts)")
+    rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes", 
+        "Типы объектов для обработки, разделенные запятыми (documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes)")
 	
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, 
 		"Подробный вывод процесса обработки")
@@ -142,11 +142,11 @@ func parseObjectTypes(typesStr string) ([]model.ObjectType, error) {
 			objectTypes = append(objectTypes, model.ObjectTypeCatalog)
         case "accumulationregisters":
             objectTypes = append(objectTypes, model.ObjectTypeAccumulationRegister)
-		case "informationationregisters":
+		case "informationregisters":
             objectTypes = append(objectTypes, model.ObjectTypeInformationRegister)
 		case "enums":
 			objectTypes = append(objectTypes, model.ObjectTypeEnum)
-		case "charts":
+		case "chartsofcharacteristictypes":
 			objectTypes = append(objectTypes, model.ObjectTypeChartOfCharacteristicTypes)
 		default:
 			return nil, fmt.Errorf("неподдерживаемый тип объекта: %s", typeName)

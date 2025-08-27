@@ -48,6 +48,7 @@ func (c *DefaultTypeConverter) ConvertType(metadataType string) string {
 		`^Type$`:                                 "Тип",
 		`^ValueStorage$`:                         "ХранилищеЗначения",
 		`^UUID$`:                                 "УникальныйИдентификатор",
+		`^AnyRef$`:                               "ЛюбаяСсылка",
 	}
 	
 	// Применяем паттерны

@@ -68,6 +68,8 @@ func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) strin
 		return "Справочник"
     case model.ObjectTypeAccumulationRegister:
         return "Регистр накопления"
+	case model.ObjectTypeInformationRegister:
+        return "Регистр сведений"
 	case model.ObjectTypeEnum:
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:
@@ -91,6 +93,36 @@ func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
 	
     // Для регистров накопления: Измерения, Ресурсы, Реквизиты
     if obj.Type == model.ObjectTypeAccumulationRegister {
+        if len(obj.Dimensions) > 0 {
+            content.WriteString("## Измерения\n\n")
+            for _, d := range obj.Dimensions {
+                typesStr := strings.Join(d.Types, ", ")
+                content.WriteString(fmt.Sprintf("- %s (%s)\n", d.Name, typesStr))
+            }
+            content.WriteString("\n")
+        }
+        if len(obj.Resources) > 0 {
+            content.WriteString("## Ресурсы\n\n")
+            for _, r := range obj.Resources {
+                typesStr := strings.Join(r.Types, ", ")
+                content.WriteString(fmt.Sprintf("- %s (%s)\n", r.Name, typesStr))
+            }
+            content.WriteString("\n")
+        }
+        // Реквизиты регистра
+        if len(obj.Attributes) > 0 {
+            content.WriteString("## Реквизиты\n\n")
+            for _, a := range obj.Attributes {
+                typesStr := strings.Join(a.Types, ", ")
+                content.WriteString(fmt.Sprintf("- %s (%s)\n", a.Name, typesStr))
+            }
+            content.WriteString("\n")
+        }
+        return content.String()
+    }
+
+    // Для регистров измерений: Измерения, Ресурсы, Реквизиты
+    if obj.Type == model.ObjectTypeInformationRegister {
         if len(obj.Dimensions) > 0 {
             content.WriteString("## Измерения\n\n")
             for _, d := range obj.Dimensions {

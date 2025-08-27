@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -26,33 +25,41 @@ func NewEDTParser(sourcePath string) (*EDTParser, error) {
 
 // EDTDocument структура для парсинга EDT документа
 type EDTDocument struct {
-	XMLName           xml.Name           `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Document"`
-	Name              string             `xml:"name"`
-	Synonym           EDTSynonym         `xml:"synonym"`
-	Attributes        []EDTAttribute     `xml:"attributes"`
-	TabularSections   []EDTTabularSection `xml:"tabularSections"`
+	XMLName         xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Document"`
+	Name            string              `xml:"name"`
+	Synonym         EDTSynonym          `xml:"synonym"`
+	Attributes      []EDTAttribute      `xml:"attributes"`
+	TabularSections []EDTTabularSection `xml:"tabularSections"`
 }
 
 // EDTCatalog структура для парсинга EDT справочника
 type EDTCatalog struct {
-	XMLName           xml.Name           `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Catalog"`
-	Name              string             `xml:"name"`
-	Synonym           EDTSynonym         `xml:"synonym"`
-	Attributes        []EDTAttribute     `xml:"attributes"`
-	TabularSections   []EDTTabularSection `xml:"tabularSections"`
+	XMLName         xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Catalog"`
+	Name            string              `xml:"name"`
+	Synonym         EDTSynonym          `xml:"synonym"`
+	Attributes      []EDTAttribute      `xml:"attributes"`
+	TabularSections []EDTTabularSection `xml:"tabularSections"`
 }
 
 // EDTAccumulationRegister структура для парсинга EDT регистра накопления
 type EDTAccumulationRegister struct {
-    XMLName     xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass AccumulationRegister"`
-    Name        string              `xml:"name"`
-    Synonym     EDTSynonym          `xml:"synonym"`
-    Dimensions  []EDTAttribute      `xml:"dimensions"`
-    Resources   []EDTAttribute      `xml:"resources"`
-    Attributes  []EDTAttribute      `xml:"attributes"`
+	XMLName    xml.Name       `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass AccumulationRegister"`
+	Name       string         `xml:"name"`
+	Synonym    EDTSynonym     `xml:"synonym"`
+	Dimensions []EDTAttribute `xml:"dimensions"`
+	Resources  []EDTAttribute `xml:"resources"`
+	Attributes []EDTAttribute `xml:"attributes"`
 }
 
-// EDTSynonym синоним в EDT формате
+// EDTInformationRegister структура для парсинга EDT регистра сведений
+type EDTInformationRegister struct {
+	XMLName    xml.Name       `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass InformationRegister"`
+	Name       string         `xml:"name"`
+	Synonym    EDTSynonym     `xml:"synonym"`
+	Dimensions []EDTAttribute `xml:"dimensions"`
+	Resources  []EDTAttribute `xml:"resources"`
+	Attributes []EDTAttribute `xml:"attributes"`
+} // EDTSynonym синоним в EDT формате
 type EDTSynonym struct {
 	Key   string `xml:"key"`
 	Value string `xml:"value"`
@@ -80,67 +87,67 @@ type EDTTabularSection struct {
 // ParseDocuments парсит все документы в EDT формате
 func (p *EDTParser) ParseDocuments() ([]model.MetadataObject, error) {
 	documentsPath := filepath.Join(p.sourcePath, "src", "Documents")
-	
+
 	// Проверяем существование каталога Documents
 	if _, err := os.Stat(documentsPath); os.IsNotExist(err) {
 		return []model.MetadataObject{}, nil // Нет документов
 	}
-	
+
 	var documents []model.MetadataObject
-	
+
 	// Сканируем каталоги документов
-	entries, err := ioutil.ReadDir(documentsPath)
+	entries, err := os.ReadDir(documentsPath)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка чтения каталога документов: %w", err)
+		return nil, err
 	}
-	
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
-		
+
 		documentName := entry.Name()
 		mdoFile := filepath.Join(documentsPath, documentName, documentName+".mdo")
-		
+
 		// Проверяем существование MDO файла
 		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		document, err := p.parseDocumentFile(mdoFile)
 		if err != nil {
 			// Логируем ошибку, но продолжаем обработку других документов
 			fmt.Printf("Предупреждение: ошибка парсинга документа %s: %v\n", documentName, err)
 			continue
 		}
-		
+
 		documents = append(documents, document)
 	}
-	
+
 	return documents, nil
 }
 
 // parseDocumentFile парсит отдельный MDO файл документа
 func (p *EDTParser) parseDocumentFile(filePath string) (model.MetadataObject, error) {
 	// Читаем файл
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
 	}
-	
+
 	// Парсим XML
 	var edtDoc EDTDocument
 	if err := xml.Unmarshal(data, &edtDoc); err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
 	}
-	
+
 	// Преобразуем в нашу модель
 	document := model.MetadataObject{
 		Type:    model.ObjectTypeDocument,
 		Name:    edtDoc.Name,
 		Synonym: edtDoc.Synonym.Value,
 	}
-	
+
 	// Парсим атрибуты
 	for _, attr := range edtDoc.Attributes {
 		convertedTypes := p.typeConverter.ConvertTypes(attr.Type.Types)
@@ -150,14 +157,14 @@ func (p *EDTParser) parseDocumentFile(filePath string) (model.MetadataObject, er
 			Types:   convertedTypes,
 		})
 	}
-	
+
 	// Парсим табличные части
 	for _, ts := range edtDoc.TabularSections {
 		tabularSection := model.TabularSection{
 			Name:    ts.Name,
 			Synonym: ts.Synonym.Value,
 		}
-		
+
 		// Парсим атрибуты табличной части
 		for _, attr := range ts.Attributes {
 			convertedTypes := p.typeConverter.ConvertTypes(attr.Type.Types)
@@ -167,146 +174,152 @@ func (p *EDTParser) parseDocumentFile(filePath string) (model.MetadataObject, er
 				Types:   convertedTypes,
 			})
 		}
-		
+
 		document.TabularSections = append(document.TabularSections, tabularSection)
 	}
-	
+
 	return document, nil
 }
 
 // ParseCatalogs парсит все справочники в EDT формате
 func (p *EDTParser) ParseCatalogs() ([]model.MetadataObject, error) {
 	catalogsPath := filepath.Join(p.sourcePath, "src", "Catalogs")
-	
+
 	// Проверяем существование каталога Catalogs
 	if _, err := os.Stat(catalogsPath); os.IsNotExist(err) {
 		return []model.MetadataObject{}, nil // Нет справочников
 	}
-	
+
 	var catalogs []model.MetadataObject
-	
+
 	// Сканируем каталоги справочников
-	entries, err := ioutil.ReadDir(catalogsPath)
+	entries, err := os.ReadDir(catalogsPath)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка чтения каталога справочников: %w", err)
 	}
-	
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
-		
+
 		catalogName := entry.Name()
 		mdoFile := filepath.Join(catalogsPath, catalogName, catalogName+".mdo")
-		
+
 		// Проверяем существование MDO файла
 		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		catalog, err := p.parseCatalogFile(mdoFile)
 		if err != nil {
 			// Логируем ошибку, но продолжаем обработку других справочников
 			fmt.Printf("Предупреждение: ошибка парсинга справочника %s: %v\n", catalogName, err)
 			continue
 		}
-		
+
 		catalogs = append(catalogs, catalog)
 	}
-	
+
 	return catalogs, nil
 }
 
 // ParseAccumulationRegisters парсит все регистры накопления в EDT формате
 func (p *EDTParser) ParseAccumulationRegisters() ([]model.MetadataObject, error) {
-    regsPath := filepath.Join(p.sourcePath, "src", "AccumulationRegisters")
-    if _, err := os.Stat(regsPath); os.IsNotExist(err) {
-        return []model.MetadataObject{}, nil
-    }
-    entries, err := ioutil.ReadDir(regsPath)
-    if err != nil {
-        return nil, fmt.Errorf("ошибка чтения каталога регистров накопления: %w", err)
-    }
-    var regs []model.MetadataObject
-    for _, entry := range entries {
-        if !entry.IsDir() { continue }
-        name := entry.Name()
-        mdoFile := filepath.Join(regsPath, name, name+".mdo")
-        if _, err := os.Stat(mdoFile); os.IsNotExist(err) { continue }
-        reg, perr := p.parseAccumulationRegisterFile(mdoFile)
-        if perr != nil {
-            fmt.Printf("Предупреждение: ошибка парсинга регистра %s: %v\n", name, perr)
-            continue
-        }
-        regs = append(regs, reg)
-    }
-    return regs, nil
+	regsPath := filepath.Join(p.sourcePath, "src", "AccumulationRegisters")
+	if _, err := os.Stat(regsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+	entries, err := os.ReadDir(regsPath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения каталога регистров накопления: %w", err)
+	}
+	var regs []model.MetadataObject
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		mdoFile := filepath.Join(regsPath, name, name+".mdo")
+		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
+			continue
+		}
+		reg, perr := p.parseAccumulationRegisterFile(mdoFile)
+		if perr != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга регистра %s: %v\n", name, perr)
+			continue
+		}
+		regs = append(regs, reg)
+	}
+	return regs, nil
 }
 
 // parseAccumulationRegisterFile парсит отдельный MDO файл регистра накопления
 func (p *EDTParser) parseAccumulationRegisterFile(filePath string) (model.MetadataObject, error) {
-    data, err := ioutil.ReadFile(filePath)
-    if err != nil { return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err) }
-    var edtReg EDTAccumulationRegister
-    if err := xml.Unmarshal(data, &edtReg); err != nil {
-        return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
-    }
-    reg := model.MetadataObject{
-        Type:    model.ObjectTypeAccumulationRegister,
-        Name:    edtReg.Name,
-        Synonym: edtReg.Synonym.Value,
-    }
-    // Измерения
-    for _, d := range edtReg.Dimensions {
-        converted := p.typeConverter.ConvertTypes(d.Type.Types)
-        reg.Dimensions = append(reg.Dimensions, model.Attribute{
-            Name:    d.Name,
-            Synonym: d.Synonym.Value,
-            Types:   converted,
-        })
-    }
-    // Ресурсы
-    for _, r := range edtReg.Resources {
-        converted := p.typeConverter.ConvertTypes(r.Type.Types)
-        reg.Resources = append(reg.Resources, model.Attribute{
-            Name:    r.Name,
-            Synonym: r.Synonym.Value,
-            Types:   converted,
-        })
-    }
-    // Реквизиты
-    for _, a := range edtReg.Attributes {
-        converted := p.typeConverter.ConvertTypes(a.Type.Types)
-        reg.Attributes = append(reg.Attributes, model.Attribute{
-            Name:    a.Name,
-            Synonym: a.Synonym.Value,
-            Types:   converted,
-        })
-    }
-    return reg, nil
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
+	}
+	var edtReg EDTAccumulationRegister
+	if err := xml.Unmarshal(data, &edtReg); err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
+	}
+	reg := model.MetadataObject{
+		Type:    model.ObjectTypeAccumulationRegister,
+		Name:    edtReg.Name,
+		Synonym: edtReg.Synonym.Value,
+	}
+	// Измерения
+	for _, d := range edtReg.Dimensions {
+		converted := p.typeConverter.ConvertTypes(d.Type.Types)
+		reg.Dimensions = append(reg.Dimensions, model.Attribute{
+			Name:    d.Name,
+			Synonym: d.Synonym.Value,
+			Types:   converted,
+		})
+	}
+	// Ресурсы
+	for _, r := range edtReg.Resources {
+		converted := p.typeConverter.ConvertTypes(r.Type.Types)
+		reg.Resources = append(reg.Resources, model.Attribute{
+			Name:    r.Name,
+			Synonym: r.Synonym.Value,
+			Types:   converted,
+		})
+	}
+	// Реквизиты
+	for _, a := range edtReg.Attributes {
+		converted := p.typeConverter.ConvertTypes(a.Type.Types)
+		reg.Attributes = append(reg.Attributes, model.Attribute{
+			Name:    a.Name,
+			Synonym: a.Synonym.Value,
+			Types:   converted,
+		})
+	}
+	return reg, nil
 }
 
 // parseCatalogFile парсит отдельный MDO файл справочника
 func (p *EDTParser) parseCatalogFile(filePath string) (model.MetadataObject, error) {
 	// Читаем файл
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
 	}
-	
+
 	// Парсим XML
 	var edtCatalog EDTCatalog
 	if err := xml.Unmarshal(data, &edtCatalog); err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
 	}
-	
+
 	// Преобразуем в нашу модель
 	catalog := model.MetadataObject{
 		Type:    model.ObjectTypeCatalog,
 		Name:    edtCatalog.Name,
 		Synonym: edtCatalog.Synonym.Value,
 	}
-	
+
 	// Парсим атрибуты
 	for _, attr := range edtCatalog.Attributes {
 		convertedTypes := p.typeConverter.ConvertTypes(attr.Type.Types)
@@ -316,14 +329,14 @@ func (p *EDTParser) parseCatalogFile(filePath string) (model.MetadataObject, err
 			Types:   convertedTypes,
 		})
 	}
-	
+
 	// Парсим табличные части
 	for _, ts := range edtCatalog.TabularSections {
 		tabularSection := model.TabularSection{
 			Name:    ts.Name,
 			Synonym: ts.Synonym.Value,
 		}
-		
+
 		// Парсим атрибуты табличной части
 		for _, attr := range ts.Attributes {
 			convertedTypes := p.typeConverter.ConvertTypes(attr.Type.Types)
@@ -333,10 +346,10 @@ func (p *EDTParser) parseCatalogFile(filePath string) (model.MetadataObject, err
 				Types:   convertedTypes,
 			})
 		}
-		
+
 		catalog.TabularSections = append(catalog.TabularSections, tabularSection)
 	}
-	
+
 	return catalog, nil
 }
 
@@ -350,10 +363,98 @@ func (p *EDTParser) ParseChartsOfCharacteristicTypes() ([]model.MetadataObject, 
 	return []model.MetadataObject{}, nil
 }
 
+// ParseInformationRegisters парсит все регистры сведений в EDT формате
+func (p *EDTParser) ParseInformationRegisters() ([]model.MetadataObject, error) {
+	regsPath := filepath.Join(p.sourcePath, "src", "InformationRegisters")
+	if _, err := os.Stat(regsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	entries, err := os.ReadDir(regsPath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения каталога регистров сведений: %w", err)
+	}
+
+	var regs []model.MetadataObject
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		mdoFile := filepath.Join(regsPath, name, name+".mdo")
+
+		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
+			continue
+		}
+
+		reg, perr := p.parseInformationRegisterFile(mdoFile)
+		if perr != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга регистра %s: %v\n", name, perr)
+			continue
+		}
+
+		regs = append(regs, reg)
+	}
+
+	return regs, nil
+}
+
+// parseInformationRegisterFile парсит отдельный MDO файл регистра сведений
+func (p *EDTParser) parseInformationRegisterFile(filePath string) (model.MetadataObject, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
+	}
+
+	var edtReg EDTInformationRegister
+	if err := xml.Unmarshal(data, &edtReg); err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML файла %s: %w", filePath, err)
+	}
+
+	reg := model.MetadataObject{
+		Type:    model.ObjectTypeInformationRegister,
+		Name:    edtReg.Name,
+		Synonym: edtReg.Synonym.Value,
+	}
+
+	// Измерения
+	for _, d := range edtReg.Dimensions {
+		converted := p.typeConverter.ConvertTypes(d.Type.Types)
+		reg.Dimensions = append(reg.Dimensions, model.Attribute{
+			Name:    d.Name,
+			Synonym: d.Synonym.Value,
+			Types:   converted,
+		})
+	}
+
+	// Ресурсы
+	for _, r := range edtReg.Resources {
+		converted := p.typeConverter.ConvertTypes(r.Type.Types)
+		reg.Resources = append(reg.Resources, model.Attribute{
+			Name:    r.Name,
+			Synonym: r.Synonym.Value,
+			Types:   converted,
+		})
+	}
+
+	// Реквизиты
+	for _, a := range edtReg.Attributes {
+		converted := p.typeConverter.ConvertTypes(a.Type.Types)
+		reg.Attributes = append(reg.Attributes, model.Attribute{
+			Name:    a.Name,
+			Synonym: a.Synonym.Value,
+			Types:   converted,
+		})
+	}
+
+	return reg, nil
+}
+
 // ParseObjectsByType парсит объекты указанных типов
 func (p *EDTParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.MetadataObject, error) {
 	var allObjects []model.MetadataObject
-	
+
 	for _, objType := range objectTypes {
 		switch objType {
 		case model.ObjectTypeDocument:
@@ -362,27 +463,35 @@ func (p *EDTParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, docs...)
-			
+
 		case model.ObjectTypeCatalog:
 			catalogs, err := p.ParseCatalogs()
 			if err != nil {
 				return nil, err
 			}
 			allObjects = append(allObjects, catalogs...)
-        case model.ObjectTypeAccumulationRegister:
-            regs, err := p.ParseAccumulationRegisters()
-            if err != nil {
-                return nil, err
-            }
-            allObjects = append(allObjects, regs...)
-			
+
+		case model.ObjectTypeAccumulationRegister:
+			regs, err := p.ParseAccumulationRegisters()
+			if err != nil {
+				return nil, err
+			}
+			allObjects = append(allObjects, regs...)
+
+		case model.ObjectTypeInformationRegister:
+			regs, err := p.ParseInformationRegisters()
+			if err != nil {
+				return nil, err
+			}
+			allObjects = append(allObjects, regs...)
+
 		case model.ObjectTypeEnum:
 			enums, err := p.ParseEnums()
 			if err != nil {
 				return nil, err
 			}
 			allObjects = append(allObjects, enums...)
-			
+
 		case model.ObjectTypeChartOfCharacteristicTypes:
 			charts, err := p.ParseChartsOfCharacteristicTypes()
 			if err != nil {
@@ -391,6 +500,6 @@ func (p *EDTParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 			allObjects = append(allObjects, charts...)
 		}
 	}
-	
+
 	return allObjects, nil
 }

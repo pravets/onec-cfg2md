@@ -444,10 +444,10 @@ func (p *EDTParser) ParseChartsOfCharacteristicTypes() ([]model.MetadataObject, 
 		}
 
 		type EDTChart struct {
-			XMLName       xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass ChartOfCharacteristicTypes"`
-			Name          string              `xml:"name"`
-			Synonym       EDTSynonym          `xml:"synonym"`
-			Attributes    []EDTAttribute      `xml:"attributes"`
+			XMLName         xml.Name            `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass ChartOfCharacteristicTypes"`
+			Name            string              `xml:"name"`
+			Synonym         EDTSynonym          `xml:"synonym"`
+			Attributes      []EDTAttribute      `xml:"attributes"`
 			TabularSections []EDTTabularSection `xml:"tabularSections"`
 		}
 

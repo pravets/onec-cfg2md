@@ -389,7 +389,7 @@ func (p *CFGParser) ParseEnums() ([]model.MetadataObject, error) {
 		type cfgEnum struct {
 			XMLName xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
 			Enum    struct {
-				Properties CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+				Properties   CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
 				ChildObjects struct {
 					EnumValues []struct {
 						Properties struct {
@@ -457,12 +457,12 @@ func (p *CFGParser) ParseChartsOfCharacteristicTypes() ([]model.MetadataObject, 
 		type cfgChart struct {
 			XMLName xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
 			Chart   struct {
-				Properties CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+				Properties   CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
 				ChildObjects struct {
-					Attributes []CFGAttribute `xml:"http://v8.1c.ru/8.3/MDClasses Attribute"`
+					Attributes      []CFGAttribute `xml:"http://v8.1c.ru/8.3/MDClasses Attribute"`
 					TabularSections []struct {
-						Properties CFGTabularSectionProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
-						ChildObjects CFGTabularSectionChilds  `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
+						Properties   CFGTabularSectionProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+						ChildObjects CFGTabularSectionChilds     `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
 					} `xml:"http://v8.1c.ru/8.3/MDClasses TabularSection"`
 				} `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
 			} `xml:"http://v8.1c.ru/8.3/MDClasses ChartOfCharacteristicTypes"`

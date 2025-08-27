@@ -87,6 +87,8 @@ func (g *CSVGenerator) getObjectTypeRussian(objType model.ObjectType) string {
 		return "Справочник"
     case model.ObjectTypeAccumulationRegister:
         return "РегистрНакопления"
+	case model.ObjectTypeInformationRegister:
+        return "РегистрСведений"
 	case model.ObjectTypeEnum:
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:

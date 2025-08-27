@@ -67,9 +67,9 @@ func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) strin
 	case model.ObjectTypeCatalog:
 		return "Справочник"
     case model.ObjectTypeAccumulationRegister:
-        return "Регистр накопления"
+        return "РегистрНакопления"
 	case model.ObjectTypeInformationRegister:
-        return "Регистр сведений"
+        return "РегистрСведений"
 	case model.ObjectTypeEnum:
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:

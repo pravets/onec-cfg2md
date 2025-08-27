@@ -355,7 +355,64 @@ func (p *EDTParser) parseCatalogFile(filePath string) (model.MetadataObject, err
 
 // ParseEnums парсит перечисления (заглушка для MVP)
 func (p *EDTParser) ParseEnums() ([]model.MetadataObject, error) {
-	return []model.MetadataObject{}, nil
+	enumsPath := filepath.Join(p.sourcePath, "src", "Enums")
+	if _, err := os.Stat(enumsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	entries, err := os.ReadDir(enumsPath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения каталога перечислений: %w", err)
+	}
+
+	var enums []model.MetadataObject
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		mdoFile := filepath.Join(enumsPath, name, name+".mdo")
+		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
+			continue
+		}
+		data, rerr := os.ReadFile(mdoFile)
+		if rerr != nil {
+			fmt.Printf("Предупреждение: ошибка чтения файла перечисления %s: %v\n", mdoFile, rerr)
+			continue
+		}
+
+		// Структура для парсинга EDT перечисления
+		type edtEnumValue struct {
+			Name    string     `xml:"name"`
+			Synonym EDTSynonym `xml:"synonym"`
+		}
+		type edtEnum struct {
+			XMLName    xml.Name       `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Enum"`
+			Name       string         `xml:"name"`
+			Synonym    EDTSynonym     `xml:"synonym"`
+			EnumValues []edtEnumValue `xml:"enumValues"`
+		}
+
+		var ee edtEnum
+		if err := xml.Unmarshal(data, &ee); err != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга перечисления %s: %v\n", mdoFile, err)
+			continue
+		}
+
+		obj := model.MetadataObject{
+			Type:    model.ObjectTypeEnum,
+			Name:    ee.Name,
+			Synonym: ee.Synonym.Value,
+		}
+
+		for _, v := range ee.EnumValues {
+			obj.EnumValues = append(obj.EnumValues, model.EnumValue{Name: v.Name, Synonym: v.Synonym.Value})
+		}
+
+		enums = append(enums, obj)
+	}
+
+	return enums, nil
 }
 
 // ParseChartsOfCharacteristicTypes парсит планы видов характеристик (заглушка для MVP)

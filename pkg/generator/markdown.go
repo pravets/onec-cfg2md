@@ -91,6 +91,22 @@ func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
 	}
 	content.WriteString("\n\n")
 	
+    // Для перечислений: печать значений
+    if obj.Type == model.ObjectTypeEnum {
+        if len(obj.EnumValues) > 0 {
+            content.WriteString("## Значения\n\n")
+            for _, v := range obj.EnumValues {
+                if v.Synonym != "" {
+                    content.WriteString(fmt.Sprintf("- %s (%s)\n", v.Name, v.Synonym))
+                } else {
+                    content.WriteString(fmt.Sprintf("- %s\n", v.Name))
+                }
+            }
+            content.WriteString("\n")
+        }
+        return content.String()
+    }
+
     // Для регистров накопления: Измерения, Ресурсы, Реквизиты
     if obj.Type == model.ObjectTypeAccumulationRegister {
         if len(obj.Dimensions) > 0 {

@@ -52,7 +52,7 @@ func init() {
 	rootCmd.Flags().StringVar(&formatFlag, "format", "", 
 		"Принудительное указание формата (cfg/edt), по умолчанию автоопределение")
 	
-    rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters,informationationregisters", 
+    rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters,informationationregisters,enums", 
         "Типы объектов для обработки, разделенные запятыми (documents,catalogs,accumulationregisters,informationationregisters,enums,charts)")
 	
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, 

@@ -364,7 +364,71 @@ func (p *CFGParser) parseCatalogFile(filePath string) (model.MetadataObject, err
 
 // ParseEnums парсит перечисления (заглушка для MVP)
 func (p *CFGParser) ParseEnums() ([]model.MetadataObject, error) {
-	return []model.MetadataObject{}, nil
+	enumsPath := filepath.Join(p.sourcePath, "Enums")
+	if _, err := os.Stat(enumsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	var enums []model.MetadataObject
+
+	err := filepath.Walk(enumsPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(strings.ToLower(info.Name()), ".xml") {
+			return nil
+		}
+
+		data, rerr := ioutil.ReadFile(path)
+		if rerr != nil {
+			fmt.Printf("Предупреждение: ошибка чтения файла перечисления %s: %v\n", path, rerr)
+			return nil
+		}
+
+		// Структура для разбора перечисления
+		type cfgEnum struct {
+			XMLName xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
+			Enum    struct {
+				Properties CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+				ChildObjects struct {
+					EnumValues []struct {
+						Properties struct {
+							Name    string     `xml:"http://v8.1c.ru/8.3/MDClasses Name"`
+							Synonym CFGSynonym `xml:"http://v8.1c.ru/8.3/MDClasses Synonym"`
+						} `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+					} `xml:"http://v8.1c.ru/8.3/MDClasses EnumValue"`
+				} `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
+			} `xml:"http://v8.1c.ru/8.3/MDClasses Enum"`
+		}
+
+		var ce cfgEnum
+		if err := xml.Unmarshal(data, &ce); err != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга перечисления %s: %v\n", path, err)
+			return nil
+		}
+
+		name := ce.Enum.Properties.Name
+		obj := model.MetadataObject{
+			Type:    model.ObjectTypeEnum,
+			Name:    name,
+			Synonym: p.extractSynonym(ce.Enum.Properties.Synonym),
+		}
+
+		for _, v := range ce.Enum.ChildObjects.EnumValues {
+			evName := v.Properties.Name
+			evSyn := p.extractSynonym(v.Properties.Synonym)
+			obj.EnumValues = append(obj.EnumValues, model.EnumValue{Name: evName, Synonym: evSyn})
+		}
+
+		enums = append(enums, obj)
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("ошибка сканирования каталога перечислений: %w", err)
+	}
+
+	return enums, nil
 }
 
 // ParseChartsOfCharacteristicTypes парсит планы видов характеристик (заглушка для MVP)

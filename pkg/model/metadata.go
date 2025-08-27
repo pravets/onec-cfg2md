@@ -11,6 +11,14 @@ type MetadataObject struct {
 	// Для регистров накопления
 	Dimensions []Attribute `json:"dimensions"`
 	Resources  []Attribute `json:"resources"`
+	// Для перечислений: значения перечисления (Name + Synonym)
+	EnumValues []EnumValue `json:"enum_values"`
+}
+
+// EnumValue представляет значение перечисления
+type EnumValue struct {
+	Name    string `json:"name"`
+	Synonym string `json:"synonym"`
 }
 
 // ObjectType определяет тип объекта метаданных

@@ -3,7 +3,6 @@ package parser
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -158,7 +157,7 @@ func (p *CFGParser) ParseDocuments() ([]model.MetadataObject, error) {
 // parseDocumentFile парсит отдельный XML файл документа в CFG формате
 func (p *CFGParser) parseDocumentFile(filePath string) (model.MetadataObject, error) {
 	// Читаем файл
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
 	}
@@ -307,7 +306,7 @@ func (p *CFGParser) ParseCatalogs() ([]model.MetadataObject, error) {
 // parseCatalogFile парсит отдельный XML файл справочника в CFG формате
 func (p *CFGParser) parseCatalogFile(filePath string) (model.MetadataObject, error) {
 	// Читаем файл
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
 	}
@@ -379,7 +378,7 @@ func (p *CFGParser) ParseEnums() ([]model.MetadataObject, error) {
 			return nil
 		}
 
-		data, rerr := ioutil.ReadFile(path)
+		data, rerr := os.ReadFile(path)
 		if rerr != nil {
 			fmt.Printf("Предупреждение: ошибка чтения файла перечисления %s: %v\n", path, rerr)
 			return nil
@@ -448,7 +447,7 @@ func (p *CFGParser) ParseChartsOfCharacteristicTypes() ([]model.MetadataObject, 
 			return nil
 		}
 
-		data, rerr := ioutil.ReadFile(path)
+		data, rerr := os.ReadFile(path)
 		if rerr != nil {
 			fmt.Printf("Предупреждение: ошибка чтения файла плана %s: %v\n", path, rerr)
 			return nil
@@ -631,7 +630,7 @@ func (p *CFGParser) ParseInformationRegisters() ([]model.MetadataObject, error) 
 
 // parseInformationRegisterFile парсит один XML файл регистра сведений
 func (p *CFGParser) parseInformationRegisterFile(filePath string) (model.MetadataObject, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
 	}
@@ -701,7 +700,7 @@ func (p *CFGParser) parseInformationRegisterFile(filePath string) (model.Metadat
 
 // parseAccumulationRegisterFile парсит один XML файл регистра накопления
 func (p *CFGParser) parseAccumulationRegisterFile(filePath string) (model.MetadataObject, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
 	}

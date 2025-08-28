@@ -119,6 +119,7 @@ jobs:
           set -e
           go test ./... -v -covermode=atomic -coverprofile=coverage.out
           go tool cover -func=coverage.out | tee coverage.txt
+          go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -127,6 +128,7 @@ jobs:
           path: |
             coverage.out
             coverage.txt
+            coverage.html
 
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v4

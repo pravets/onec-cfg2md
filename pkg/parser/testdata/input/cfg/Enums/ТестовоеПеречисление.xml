@@ -1,0 +1,72 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.16">
+  <Enum uuid="4a6e9b1a-8c3b-4b2f-9f10-2a3b4c5d6e7f">
+    <Properties>
+      <Name>ТестовоеПеречисление</Name>
+      <Synonym>
+        <v8:item>
+          <v8:lang>ru</v8:lang>
+          <v8:content>Тестовое перечисление</v8:content>
+        </v8:item>
+      </Synonym>
+    </Properties>
+    <ChildObjects>
+      <EnumValue uuid="6f2d1a35-8c9b-4b6f-9d3a-1a2b3c4d5e6f">
+        <Properties>
+          <Name>Значение1</Name>
+          <Synonym>
+            <v8:item>
+              <v8:lang>ru</v8:lang>
+              <v8:content>Значение 1</v8:content>
+            </v8:item>
+          </Synonym>
+        </Properties>
+      </EnumValue>
+      <EnumValue uuid="7a3e2b46-9d8c-4c7e-8e4b-2b3c4d5e6f70">
+        <Properties>
+          <Name>Значение2</Name>
+          <Synonym>
+            <v8:item>
+              <v8:lang>ru</v8:lang>
+              <v8:content>Значение (2)</v8:content>
+            </v8:item>
+          </Synonym>
+        </Properties>
+      </EnumValue>
+      <EnumValue uuid="8b4f3c57-ae9d-4d8f-9f5c-3c4d5e6f7081">
+        <Properties>
+          <Name>Значение3</Name>
+          <Synonym>
+            <v8:item>
+              <v8:lang>ru</v8:lang>
+              <v8:content>Значение три</v8:content>
+            </v8:item>
+          </Synonym>
+        </Properties>
+      </EnumValue>
+      <EnumValue uuid="9c5a4d68-bf0e-4e90-af6d-4d5e6f708192">
+        <Properties>
+          <Name>Значение4</Name>
+          <Synonym>
+            <v8:item>
+              <v8:lang>ru</v8:lang>
+              <v8:content>Значение (четыре)</v8:content>
+            </v8:item>
+          </Synonym>
+        </Properties>
+      </EnumValue>
+      <EnumValue uuid="ad6b5e79-c012-4fa1-b076-5e6f708192a3">
+        <Properties>
+          <Name>Значение5</Name>
+          <Synonym>
+            <v8:item>
+              <v8:lang>ru</v8:lang>
+              <v8:content>Еще какое-то значение</v8:content>
+            </v8:item>
+          </Synonym>
+        </Properties>
+      </EnumValue>
+    </ChildObjects>
+  </Enum>
+</MetaDataObject>

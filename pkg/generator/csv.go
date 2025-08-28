@@ -27,7 +27,7 @@ func (g *CSVGenerator) GenerateCatalog(objects []model.MetadataObject) error {
 	if err := os.MkdirAll(g.outputPath, 0755); err != nil {
 		return fmt.Errorf("ошибка создания выходного каталога %s: %w", g.outputPath, err)
 	}
-	
+
 	// Создаем CSV файл
 	csvPath := filepath.Join(g.outputPath, "objects.csv")
 	file, err := os.Create(csvPath)
@@ -35,17 +35,17 @@ func (g *CSVGenerator) GenerateCatalog(objects []model.MetadataObject) error {
 		return fmt.Errorf("ошибка создания CSV файла %s: %w", csvPath, err)
 	}
 	defer file.Close()
-	
+
 	writer := csv.NewWriter(file)
 	writer.Comma = ';' // Используем точку с запятой как разделитель
 	defer writer.Flush()
-	
+
 	// Записываем заголовок
 	header := []string{"Имя объекта", "Тип объекта", "Синоним", "Файл"}
 	if err := writer.Write(header); err != nil {
 		return fmt.Errorf("ошибка записи заголовка CSV: %w", err)
 	}
-	
+
 	// Записываем данные объектов
 	for _, obj := range objects {
 		entry := g.createCatalogEntry(obj)
@@ -55,12 +55,12 @@ func (g *CSVGenerator) GenerateCatalog(objects []model.MetadataObject) error {
 			entry.Synonym,
 			entry.FileName,
 		}
-		
+
 		if err := writer.Write(record); err != nil {
 			return fmt.Errorf("ошибка записи записи CSV для объекта %s: %w", obj.Name, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -69,7 +69,7 @@ func (g *CSVGenerator) createCatalogEntry(obj model.MetadataObject) model.Catalo
 	typeRussian := g.getObjectTypeRussian(obj.Type)
 	objectName := fmt.Sprintf("%s.%s", typeRussian, obj.Name)
 	fileName := fmt.Sprintf("%s_%s.md", typeRussian, obj.Name)
-	
+
 	return model.CatalogEntry{
 		ObjectName: objectName,
 		ObjectType: typeRussian,
@@ -85,10 +85,10 @@ func (g *CSVGenerator) getObjectTypeRussian(objType model.ObjectType) string {
 		return "Документ"
 	case model.ObjectTypeCatalog:
 		return "Справочник"
-    case model.ObjectTypeAccumulationRegister:
-        return "РегистрНакопления"
+	case model.ObjectTypeAccumulationRegister:
+		return "РегистрНакопления"
 	case model.ObjectTypeInformationRegister:
-        return "РегистрСведений"
+		return "РегистрСведений"
 	case model.ObjectTypeEnum:
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:

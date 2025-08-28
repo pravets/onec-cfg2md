@@ -15,7 +15,7 @@ func DetectFormat(sourcePath string) (model.SourceFormat, error) {
 	if err != nil {
 		return "", fmt.Errorf("не удается получить доступ к каталогу %s: %w", sourcePath, err)
 	}
-	
+
 	if !info.IsDir() {
 		return "", fmt.Errorf("путь %s не является каталогом", sourcePath)
 	}
@@ -25,7 +25,7 @@ func DetectFormat(sourcePath string) (model.SourceFormat, error) {
 		return model.FormatCFG, nil
 	}
 
-	// Проверяем EDT формат  
+	// Проверяем EDT формат
 	if isEDTFormat(sourcePath) {
 		return model.FormatEDT, nil
 	}
@@ -44,10 +44,10 @@ func isCFGFormat(sourcePath string) bool {
 func isEDTFormat(sourcePath string) bool {
 	projectPath := filepath.Join(sourcePath, ".project")
 	srcPath := filepath.Join(sourcePath, "src")
-	
+
 	_, errProject := os.Stat(projectPath)
 	_, errSrc := os.Stat(srcPath)
-	
+
 	return errProject == nil && errSrc == nil
 }
 
@@ -65,6 +65,6 @@ func ValidateFormat(sourcePath string, format model.SourceFormat) error {
 	default:
 		return fmt.Errorf("неподдерживаемый формат: %s", format)
 	}
-	
+
 	return nil
 }

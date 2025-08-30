@@ -571,10 +571,10 @@ func (p *EDTParser) parseConstantFile(filePath string) (model.MetadataObject, er
 	}
 
 	type edtConst struct {
-		XMLName xml.Name `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Constant"`
-		Name    string   `xml:"name"`
+		XMLName xml.Name   `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Constant"`
+		Name    string     `xml:"name"`
 		Synonym EDTSynonym `xml:"synonym"`
-		Type    EDTType  `xml:"type"`
+		Type    EDTType    `xml:"type"`
 	}
 
 	var ec edtConst
@@ -590,9 +590,9 @@ func (p *EDTParser) parseConstantFile(filePath string) (model.MetadataObject, er
 
 	converted := p.typeConverter.ConvertTypes(ec.Type.Types)
 	obj.Attributes = append(obj.Attributes, model.Attribute{
-		Name:   "Значение",
+		Name:    "Значение",
 		Synonym: "",
-		Types:  converted,
+		Types:   converted,
 	})
 
 	return obj, nil

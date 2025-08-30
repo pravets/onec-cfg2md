@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"ones-cfg2md/pkg/detector"
@@ -39,7 +38,7 @@ var rootCmd = &cobra.Command{
   - enums (перечисления)
   - chartsofcharacteristictypes (планы видов характеристик)`,
 	Args: cobra.ExactArgs(2),
-	Run:  runConversion,
+	RunE: runConversion,
 }
 
 // Execute выполняет основную команду

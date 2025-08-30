@@ -51,7 +51,7 @@ func TestParseObjectTypes(t *testing.T) {
 			expectError:   true,
 		},
 		{
-			name: "All types",
+			name:     "All types",
 			typesStr: "documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes",
 			expectedTypes: []model.ObjectType{
 				model.ObjectTypeDocument,
@@ -375,4 +375,3 @@ func TestRootCmd(t *testing.T) {
 		t.Errorf("Expected file '%s' to be created, but it was not", expectedFile)
 	}
 }
-

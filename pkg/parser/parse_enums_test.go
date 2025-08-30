@@ -12,7 +12,7 @@ func TestParseEnums_FromFixture(t *testing.T) {
 	t.Run("EDT", func(t *testing.T) {
 		// compute path relative to this test file to avoid depending on working directory
 		_, thisFile, _, _ := runtime.Caller(0)
-		testRoot := filepath.Join(filepath.Dir(thisFile), "testdata", "input", "edt")
+		testRoot := filepath.Join(filepath.Dir(thisFile), "..", "..", "fixtures", "input", "edt")
 		edtFixture := testRoot
 
 		p, err := NewEDTParser(edtFixture)
@@ -36,7 +36,7 @@ func TestParseEnums_FromFixture(t *testing.T) {
 	t.Run("CFG", func(t *testing.T) {
 		// compute path relative to this test file to avoid depending on working directory
 		_, thisFile, _, _ := runtime.Caller(0)
-		testRoot := filepath.Join(filepath.Dir(thisFile), "testdata", "input", "cfg")
+		testRoot := filepath.Join(filepath.Dir(thisFile), "..", "..", "fixtures", "input", "cfg")
 		cfgFixture := testRoot
 
 		p, err := NewCFGParser(cfgFixture)

@@ -16,7 +16,7 @@ func loadReference(t *testing.T) string {
 	t.Helper()
 	// compute path relative to this test file's testdata
 	_, thisFile, _, _ := runtime.Caller(0)
-	refPath := filepath.Join(filepath.Dir(thisFile), "testdata", "output", "Перечисление_ТестовоеПеречисление.md")
+	refPath := filepath.Join(filepath.Dir(thisFile), "..", "..", "fixtures", "output", "Перечисление_СостоянияЗаказов.md")
 	data, err := os.ReadFile(refPath)
 	if err != nil {
 		t.Fatalf("failed to read reference markdown: %v", err)
@@ -33,7 +33,7 @@ func TestMarkdownFromFixtureMatchesReference(t *testing.T) {
 	// compute testdata directory relative to this test file to avoid depending on working directory
 	// parser fixtures are kept under pkg/parser/testdata/input
 	_, thisFile, _, _ := runtime.Caller(0)
-	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "parser", "testdata")
+	repoRoot := filepath.Join(filepath.Dir(thisFile), "..", "..", "fixtures")
 	repoRoot, _ = filepath.Abs(repoRoot)
 
 	ref := loadReference(t)
@@ -86,9 +86,19 @@ func TestMarkdownFromFixtureMatchesReference(t *testing.T) {
 				t.Fatalf("no enums parsed from %s fixtures", c.kind)
 			}
 
-			e := enums[0]
+			var targetEnum model.MetadataObject
+			for _, e := range enums {
+				if e.Name == "СостоянияЗаказов" {
+					targetEnum = e
+					break
+				}
+			}
+			if targetEnum.Name == "" {
+				t.Fatalf("target enum `СостоянияЗаказов` not found in %s fixtures", c.kind)
+			}
+
 			g := NewMarkdownGenerator("")
-			got := testutil.Normalize(g.generateContent(e))
+			got := testutil.Normalize(g.generateContent(targetEnum))
 
 			if strings.TrimSpace(got) != strings.TrimSpace(ref) {
 				t.Fatalf("generated markdown does not match reference\n--- got ---\n%s\n--- ref ---\n%s", got, ref)

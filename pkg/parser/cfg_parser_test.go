@@ -165,3 +165,35 @@ func TestIsDateOnly(t *testing.T) {
 		t.Fatalf("expected isDateOnly to return false when no DateQualifiers present")
 	}
 }
+
+func TestParseConstants_FromFixtures(t *testing.T) {
+	fixtures := filepath.Join("..", "..", "fixtures", "input", "cfg")
+	p, err := NewCFGParser(fixtures)
+	if err != nil {
+		t.Fatalf("NewCFGParser: %v", err)
+	}
+
+	consts, err := p.ParseConstants()
+	if err != nil {
+		t.Fatalf("ParseConstants: %v", err)
+	}
+
+	// Expecting fixtures to contain ВалютаУчета and УчетПоСкладам
+	c1 := findByName(consts, "ВалютаУчета")
+	if c1 == nil {
+		t.Fatalf("expected constant ВалютаУчета among %d constants", len(consts))
+	}
+	if len(c1.Attributes) == 0 {
+		t.Fatalf("expected attributes for constant ВалютаУчета, got none")
+	}
+	if c1.Attributes[0].Name != "Значение" {
+		t.Fatalf("expected attribute name 'Значение' for constant, got '%s'", c1.Attributes[0].Name)
+	}
+	if len(c1.Attributes[0].Types) == 0 {
+		t.Fatalf("expected types for constant ВалютаУчета attribute, got none")
+	}
+
+	if findByName(consts, "УчетПоСкладам") == nil {
+		t.Fatalf("expected constant УчетПоСкладам among %d constants", len(consts))
+	}
+}

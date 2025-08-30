@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"ones-cfg2md/pkg/model"
 	"os"
 	"path/filepath"
@@ -83,7 +82,7 @@ func TestParseObjectTypes(t *testing.T) {
 
 func TestRootCmd(t *testing.T) {
 	// Create a temporary directory for the source
-	sourceDir, err := ioutil.TempDir("", "source")
+	sourceDir, err := os.MkdirTemp("", "source")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,7 +208,7 @@ func TestRootCmd(t *testing.T) {
 </MetaDataObject>
 `
 	configFile := filepath.Join(sourceDir, "Configuration.xml")
-	if err := ioutil.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -343,12 +342,12 @@ func TestRootCmd(t *testing.T) {
 	</Document>
 </MetaDataObject>
 `
-	if err := ioutil.WriteFile(documentFile, []byte(documentContent), 0644); err != nil {
+	if err := os.WriteFile(documentFile, []byte(documentContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a temporary directory for the output
-	outputDir, err := ioutil.TempDir("", "output")
+	outputDir, err := os.MkdirTemp("", "output")
 	if err != nil {
 		t.Fatal(err)
 	}

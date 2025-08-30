@@ -93,6 +93,8 @@ func (g *CSVGenerator) getObjectTypeRussian(objType model.ObjectType) string {
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:
 		return "ПланВидовХарактеристик"
+	case model.ObjectTypeConstant:
+		return "Константа"
 	default:
 		return string(objType)
 	}

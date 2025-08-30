@@ -31,6 +31,7 @@ const (
 	ObjectTypeChartOfCharacteristicTypes ObjectType = "ChartOfCharacteristicTypes"
 	ObjectTypeAccumulationRegister       ObjectType = "AccumulationRegister"
 	ObjectTypeInformationRegister        ObjectType = "InformationRegister"
+	ObjectTypeConstant                   ObjectType = "Constant"
 )
 
 // Attribute представляет реквизит объекта

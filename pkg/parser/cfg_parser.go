@@ -563,6 +563,13 @@ func (p *CFGParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, charts...)
+
+		case model.ObjectTypeConstant:
+			consts, err := p.ParseConstants()
+			if err != nil {
+				return nil, err
+			}
+			allObjects = append(allObjects, consts...)
 		}
 	}
 
@@ -594,6 +601,95 @@ func (p *CFGParser) ParseAccumulationRegisters() ([]model.MetadataObject, error)
 		return nil, fmt.Errorf("ошибка сканирования регистров накопления: %w", err)
 	}
 	return regs, nil
+}
+
+// ParseConstants парсит константы в CFG формате
+func (p *CFGParser) ParseConstants() ([]model.MetadataObject, error) {
+	constsPath := filepath.Join(p.sourcePath, "Constants")
+	if _, err := os.Stat(constsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	var consts []model.MetadataObject
+	err := filepath.Walk(constsPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(strings.ToLower(info.Name()), ".xml") {
+			return nil
+		}
+
+		c, perr := p.parseConstantFile(path)
+		if perr != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга константы %s: %v\n", path, perr)
+			return nil
+		}
+		consts = append(consts, c)
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("ошибка сканирования каталога констант: %w", err)
+	}
+	return consts, nil
+}
+
+// parseConstantFile парсит отдельный XML файл константы
+func (p *CFGParser) parseConstantFile(filePath string) (model.MetadataObject, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
+	}
+
+	type cfgConstant struct {
+		XMLName  xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
+		Constant struct {
+			Properties CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+		} `xml:"http://v8.1c.ru/8.3/MDClasses Constant"`
+	}
+
+	var cc cfgConstant
+	if err := xml.Unmarshal(data, &cc); err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML %s: %w", filePath, err)
+	}
+
+	name := cc.Constant.Properties.Name
+	syn := p.extractSynonym(cc.Constant.Properties.Synonym)
+
+	// Попробуем извлечь тип, если он есть
+	var types []string
+	// В CFG структура Properties может содержать Type, но CFGProperties не содержит Type напрямую
+	// Попробуем распарсить вспомогательную структуру для получения Type
+	type cfgConstantWithType struct {
+		Constant struct {
+			Properties struct {
+				Name    string     `xml:"http://v8.1c.ru/8.3/MDClasses Name"`
+				Synonym CFGSynonym `xml:"http://v8.1c.ru/8.3/MDClasses Synonym"`
+				Type    CFGType    `xml:"http://v8.1c.ru/8.3/MDClasses Type"`
+			} `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+		} `xml:"http://v8.1c.ru/8.3/MDClasses Constant"`
+	}
+	var ct cfgConstantWithType
+	if err := xml.Unmarshal(data, &ct); err == nil {
+		types = p.extractTypes(ct.Constant.Properties.Type)
+	}
+
+	converted := p.typeConverter.ConvertTypes(types)
+
+	obj := model.MetadataObject{
+		Type:    model.ObjectTypeConstant,
+		Name:    name,
+		Synonym: syn,
+	}
+
+	// Поместим информацию о значении константы как атрибут "Значение"
+	obj.Attributes = append(obj.Attributes, model.Attribute{
+		Name:   "Значение",
+		Synonym: "",
+		Types:  converted,
+	})
+
+	return obj, nil
 }
 
 // ParseInformationRegisters парсит регистры сведений в CFG формате

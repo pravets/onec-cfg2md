@@ -74,6 +74,8 @@ func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) strin
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:
 		return "ПланВидовХарактеристик"
+	case model.ObjectTypeConstant:
+		return "Константа"
 	default:
 		return string(objType)
 	}

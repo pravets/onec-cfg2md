@@ -105,3 +105,25 @@ func TestEDT_ParseCharts_FromFixtures(t *testing.T) {
 		t.Fatalf("expected chart ВидыХарактеристик in EDT fixtures")
 	}
 }
+
+func TestEDT_ParseConstants_FromFixtures(t *testing.T) {
+	fixtures := filepath.Join("..", "..", "fixtures", "input", "edt")
+	p, err := NewEDTParser(fixtures)
+	if err != nil {
+		t.Fatalf("NewEDTParser: %v", err)
+	}
+
+	consts, err := p.ParseConstants()
+	if err != nil {
+		t.Fatalf("ParseConstants: %v", err)
+	}
+
+	if len(consts) == 0 {
+		t.Fatalf("expected constants from EDT fixtures, got none")
+	}
+
+	// Check at least ВалютаУчета exists
+	if findByName(consts, "ВалютаУчета") == nil {
+		t.Fatalf("expected constant ВалютаУчета in EDT fixtures")
+	}
+}

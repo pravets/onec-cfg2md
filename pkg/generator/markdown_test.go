@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"ones-cfg2md/pkg/model"
 	"ones-cfg2md/pkg/parser"
 	"ones-cfg2md/pkg/testutil"
@@ -330,9 +331,9 @@ func TestGenerateContent_EdgeCases(t *testing.T) {
 func TestGenerateContent_Constant(t *testing.T) {
 	g := NewMarkdownGenerator("")
 	obj := model.MetadataObject{
-		Type: model.ObjectTypeConstant,
-		Name: "ВалютаУчета",
-		Synonym: "Валюта учета",
+		Type:       model.ObjectTypeConstant,
+		Name:       "ВалютаУчета",
+		Synonym:    "Валюта учета",
 		Attributes: []model.Attribute{{Name: "Значение", Types: []string{"CatalogRef.Валюты"}}},
 	}
 	got := g.generateContent(obj)
@@ -341,5 +342,43 @@ func TestGenerateContent_Constant(t *testing.T) {
 	}
 	if !strings.Contains(got, "Значение") {
 		t.Fatalf("expected attribute name 'Значение' in content, got: %s", got)
+	}
+}
+
+func TestGenerateContent_Constants_GoldenFiles(t *testing.T) {
+	fixtureDir := filepath.Join("..", "..", "fixtures")
+	cfgRoot := filepath.Join(fixtureDir, "input", "cfg")
+
+	p, err := parser.NewCFGParser(cfgRoot)
+	if err != nil {
+		t.Fatalf("failed to create CFG parser: %v", err)
+	}
+
+	consts, err := p.ParseConstants()
+	if err != nil {
+		t.Fatalf("ParseConstants: %v", err)
+	}
+
+	if len(consts) == 0 {
+		t.Fatalf("expected constants in fixtures, got none")
+	}
+
+	g := NewMarkdownGenerator("")
+
+	for _, c := range consts {
+		t.Run(c.Name, func(t *testing.T) {
+			got := testutil.Normalize(g.generateContent(c))
+
+			golden := filepath.Join(fixtureDir, "output", fmt.Sprintf("Константа_%s.md", c.Name))
+			refBytes, err := os.ReadFile(golden)
+			if err != nil {
+				t.Fatalf("failed to read golden file '%s': %v", golden, err)
+			}
+			want := testutil.Normalize(string(refBytes))
+
+			if got != want {
+				t.Fatalf("constant markdown mismatch for %s\n---\ngot---\n%s\n--- want ---\n%s", c.Name, got, want)
+			}
+		})
 	}
 }

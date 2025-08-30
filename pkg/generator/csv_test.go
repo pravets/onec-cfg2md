@@ -9,12 +9,12 @@ import (
 func TestCreateCatalogEntry(t *testing.T) {
 	g := NewCSVGenerator("./out")
 	cases := []struct {
-		name            string
-		in              model.MetadataObject
-		wantObjectName  string
-		wantObjectType  string
-		wantSynonym     string
-		wantFileName    string
+		name           string
+		in             model.MetadataObject
+		wantObjectName string
+		wantObjectType string
+		wantSynonym    string
+		wantFileName   string
 	}{
 		{
 			name: "Standard catalog",
@@ -56,7 +56,7 @@ func TestCreateCatalogEntry(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := g.createCatalogEntry(tc.in)
-			
+
 			wantObjectName := tc.wantObjectType + "." + tc.in.Name
 
 			if got.FileName != tc.wantFileName {

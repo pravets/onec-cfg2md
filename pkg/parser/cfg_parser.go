@@ -684,9 +684,9 @@ func (p *CFGParser) parseConstantFile(filePath string) (model.MetadataObject, er
 
 	// Поместим информацию о значении константы как атрибут "Значение"
 	obj.Attributes = append(obj.Attributes, model.Attribute{
-		Name:   "Значение",
+		Name:    "Значение",
 		Synonym: "",
-		Types:  converted,
+		Types:   converted,
 	})
 
 	return obj, nil

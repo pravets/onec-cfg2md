@@ -6,6 +6,7 @@ import (
 	"ones-cfg2md/pkg/testutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -323,5 +324,22 @@ func TestGenerateContent_EdgeCases(t *testing.T) {
 				t.Errorf("generateContent() for '%s' failed\n---\ngot---\n%s\n--- want ---\n%s", tc.name, got, tc.want)
 			}
 		})
+	}
+}
+
+func TestGenerateContent_Constant(t *testing.T) {
+	g := NewMarkdownGenerator("")
+	obj := model.MetadataObject{
+		Type: model.ObjectTypeConstant,
+		Name: "ВалютаУчета",
+		Synonym: "Валюта учета",
+		Attributes: []model.Attribute{{Name: "Значение", Types: []string{"CatalogRef.Валюты"}}},
+	}
+	got := g.generateContent(obj)
+	if !strings.Contains(got, "# Константа: ВалютаУчета") {
+		t.Fatalf("expected header for constant, got: %s", got)
+	}
+	if !strings.Contains(got, "Значение") {
+		t.Fatalf("expected attribute name 'Значение' in content, got: %s", got)
 	}
 }

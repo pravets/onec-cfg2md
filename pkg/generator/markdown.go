@@ -74,6 +74,8 @@ func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) strin
 		return "Перечисление"
 	case model.ObjectTypeChartOfCharacteristicTypes:
 		return "ПланВидовХарактеристик"
+	case model.ObjectTypeConstant:
+		return "Константа"
 	default:
 		return string(objType)
 	}
@@ -169,7 +171,8 @@ func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
 
 	// Реквизиты / Реквизиты шапки
 	if len(obj.Attributes) > 0 {
-		if obj.Type == model.ObjectTypeCatalog {
+		if obj.Type == model.ObjectTypeCatalog || obj.Type == model.ObjectTypeConstant {
+			// Для справочников и констант используем заголовок "Реквизиты"
 			content.WriteString("## Реквизиты\n\n")
 		} else {
 			content.WriteString("## Реквизиты шапки\n\n")

@@ -531,6 +531,73 @@ func (p *EDTParser) ParseInformationRegisters() ([]model.MetadataObject, error) 
 	return regs, nil
 }
 
+// ParseConstants парсит константы в EDT (MDO) структуре
+func (p *EDTParser) ParseConstants() ([]model.MetadataObject, error) {
+	constsPath := filepath.Join(p.sourcePath, "src", "Constants")
+	if _, err := os.Stat(constsPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	entries, err := os.ReadDir(constsPath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения каталога констант: %w", err)
+	}
+
+	var consts []model.MetadataObject
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		mdoFile := filepath.Join(constsPath, name, name+".mdo")
+		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
+			continue
+		}
+		c, perr := p.parseConstantFile(mdoFile)
+		if perr != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга константы %s: %v\n", name, perr)
+			continue
+		}
+		consts = append(consts, c)
+	}
+	return consts, nil
+}
+
+// parseConstantFile парсит MDO файл константы
+func (p *EDTParser) parseConstantFile(filePath string) (model.MetadataObject, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
+	}
+
+	type edtConst struct {
+		XMLName xml.Name   `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass Constant"`
+		Name    string     `xml:"name"`
+		Synonym EDTSynonym `xml:"synonym"`
+		Type    EDTType    `xml:"type"`
+	}
+
+	var ec edtConst
+	if err := xml.Unmarshal(data, &ec); err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML %s: %w", filePath, err)
+	}
+
+	obj := model.MetadataObject{
+		Type:    model.ObjectTypeConstant,
+		Name:    ec.Name,
+		Synonym: ec.Synonym.Value,
+	}
+
+	converted := p.typeConverter.ConvertTypes(ec.Type.Types)
+	obj.Attributes = append(obj.Attributes, model.Attribute{
+		Name:    "Значение",
+		Synonym: "",
+		Types:   converted,
+	})
+
+	return obj, nil
+}
+
 // parseInformationRegisterFile парсит отдельный MDO файл регистра сведений
 func (p *EDTParser) parseInformationRegisterFile(filePath string) (model.MetadataObject, error) {
 	data, err := os.ReadFile(filePath)
@@ -629,6 +696,13 @@ func (p *EDTParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, charts...)
+
+		case model.ObjectTypeConstant:
+			consts, err := p.ParseConstants()
+			if err != nil {
+				return nil, err
+			}
+			allObjects = append(allObjects, consts...)
 		}
 	}
 

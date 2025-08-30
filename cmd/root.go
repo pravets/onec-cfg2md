@@ -112,6 +112,7 @@ func runConversion(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Конвертация завершена успешно!\n")
 	fmt.Printf("Результаты сохранены в: %s\n", outputPath)
+	return nil
 }
 
 // parseObjectTypes парсит строку типов объектов

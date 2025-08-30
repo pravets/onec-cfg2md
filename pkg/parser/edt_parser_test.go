@@ -86,3 +86,23 @@ func TestEDT_ParseObjectsByType_Aggregation(t *testing.T) {
         t.Fatalf("expected aggregated objects from EDT fixtures, got none")
     }
 }
+
+func TestEDT_ParseCharts_FromFixtures(t *testing.T) {
+    fixtures := filepath.Join("..", "..", "fixtures", "input", "edt")
+    p, err := NewEDTParser(fixtures)
+    if err != nil {
+        t.Fatalf("NewEDTParser: %v", err)
+    }
+
+    charts, err := p.ParseChartsOfCharacteristicTypes()
+    if err != nil {
+        t.Fatalf("ParseChartsOfCharacteristicTypes: %v", err)
+    }
+    if len(charts) == 0 {
+        t.Fatalf("expected charts from EDT fixtures, got none")
+    }
+    if findByName(charts, "ВидыХарактеристик") == nil {
+        t.Fatalf("expected chart ВидыХарактеристик in EDT fixtures")
+    }
+}
+

@@ -60,7 +60,7 @@ func init() {
 }
 
 // runConversion выполняет конвертацию
-func runConversion(cmd *cobra.Command, args []string) {
+func runConversion(cmd *cobra.Command, args []string) error {
 	sourcePath := args[0]
 	outputPath := args[1]
 
@@ -81,21 +81,16 @@ func runConversion(cmd *cobra.Command, args []string) {
 		case "edt":
 			options.Format = model.FormatEDT
 		default:
-			fmt.Fprintf(os.Stderr, "Ошибка: неподдерживаемый формат '%s'. Используйте 'cfg' или 'edt'\n", formatFlag)
-			os.Exit(1)
+			return fmt.Errorf("неподдерживаемый формат '%s'. Используйте 'cfg' или 'edt'", formatFlag)
 		}
 
-		// Проверяем корректность формата
 		if err := detector.ValidateFormat(sourcePath, options.Format); err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка: %v\n", err)
-			os.Exit(1)
+			return err
 		}
 	} else {
-		// Автоопределение формата
 		options.Format, err = detector.DetectFormat(sourcePath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка определения формата: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("ошибка определения формата: %w", err)
 		}
 	}
 
@@ -103,21 +98,17 @@ func runConversion(cmd *cobra.Command, args []string) {
 		fmt.Printf("Определен формат: %s\n", options.Format)
 	}
 
-	// Парсим типы объектов
 	options.ObjectTypes, err = parseObjectTypes(typesFlag)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	if verboseFlag {
 		fmt.Printf("Типы объектов для обработки: %v\n", options.ObjectTypes)
 	}
 
-	// Выполняем конвертацию
 	if err := performConversion(options); err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка конвертации: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("ошибка конвертации: %w", err)
 	}
 
 	fmt.Printf("Конвертация завершена успешно!\n")

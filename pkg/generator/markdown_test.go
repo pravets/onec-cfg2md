@@ -39,9 +39,9 @@ func TestGenerateContent_GoldenFiles(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name             string
-		objectName       string
-		goldenFileName   string
+		name           string
+		objectName     string
+		goldenFileName string
 	}{
 		{"Enum", "СостоянияЗаказов", "Перечисление_СостоянияЗаказов.md"},
 		{"Document", "Заказ", "Документ_Заказ.md"},

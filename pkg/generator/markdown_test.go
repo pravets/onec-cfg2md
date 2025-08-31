@@ -345,6 +345,36 @@ func TestGenerateContent_Constant(t *testing.T) {
 	}
 }
 
+func TestGenerateContent_FilterCriteria(t *testing.T) {
+	g := NewMarkdownGenerator("")
+	obj := model.MetadataObject{
+		Type:                   model.ObjectTypeFilterCriteria,
+		Name:                   "ДокументыКонтрагента",
+		Synonym:                "Документы контрагента",
+		FilterCriteriaTypes:    []string{"Справочник.Контрагенты"},
+		FilterCriteriaContents: []string{"Document.ПриходТовара.Реквизит.Поставщик", "Document.РасходТовара.Реквизит.Покупатель"},
+	}
+	got := g.generateContent(obj)
+	// Header in fixtures uses "Критерий отбора" (with space and lowercase 'о')
+	if !strings.Contains(got, "# Критерий отбора: ДокументыКонтрагента") && !strings.Contains(got, "# КритерийОтбора: ДокументыКонтрагента") {
+		t.Fatalf("expected header for filter criteria, got: %s", got)
+	}
+
+	if !strings.Contains(got, "## Типы") {
+		t.Fatalf("expected 'Типы' section in content, got: %s", got)
+	}
+	if !strings.Contains(got, "Справочник.Контрагенты") {
+		t.Fatalf("expected type 'Справочник.Контрагенты' in content, got: %s", got)
+	}
+
+	if !strings.Contains(got, "## Состав") {
+		t.Fatalf("expected 'Состав' section in content, got: %s", got)
+	}
+	if !strings.Contains(got, "Document.ПриходТовара") {
+		t.Fatalf("expected content items in 'Состав', got: %s", got)
+	}
+}
+
 func TestGenerateContent_Constants_GoldenFiles(t *testing.T) {
 	fixtureDir := filepath.Join("..", "..", "fixtures")
 	cfgRoot := filepath.Join(fixtureDir, "input", "cfg")

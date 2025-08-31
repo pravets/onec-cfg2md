@@ -95,6 +95,8 @@ func (g *CSVGenerator) getObjectTypeRussian(objType model.ObjectType) string {
 		return "ПланВидовХарактеристик"
 	case model.ObjectTypeConstant:
 		return "Константа"
+	case model.ObjectTypeFilterCriteria:
+		return "КритерийОтбора"
 	default:
 		return string(objType)
 	}

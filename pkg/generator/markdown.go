@@ -76,6 +76,8 @@ func (g *MarkdownGenerator) getObjectTypeRussian(objType model.ObjectType) strin
 		return "ПланВидовХарактеристик"
 	case model.ObjectTypeConstant:
 		return "Константа"
+	case model.ObjectTypeFilterCriteria:
+		return "КритерийОтбора"
 	default:
 		return string(objType)
 	}
@@ -86,12 +88,21 @@ func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
 	var content strings.Builder
 
 	// Заголовок
-	typeRussian := g.getObjectTypeRussian(obj.Type)
-	content.WriteString(fmt.Sprintf("# %s: %s", typeRussian, obj.Name))
-	if obj.Synonym != "" {
-		content.WriteString(fmt.Sprintf(" (%s)", obj.Synonym))
+	if obj.Type == model.ObjectTypeFilterCriteria {
+		// human-readable header for filter criteria (matches fixtures)
+		content.WriteString(fmt.Sprintf("# Критерий отбора: %s", obj.Name))
+		if obj.Synonym != "" {
+			content.WriteString(fmt.Sprintf(" (%s)", obj.Synonym))
+		}
+		content.WriteString("\n\n")
+	} else {
+		typeRussian := g.getObjectTypeRussian(obj.Type)
+		content.WriteString(fmt.Sprintf("# %s: %s", typeRussian, obj.Name))
+		if obj.Synonym != "" {
+			content.WriteString(fmt.Sprintf(" (%s)", obj.Synonym))
+		}
+		content.WriteString("\n\n")
 	}
-	content.WriteString("\n\n")
 
 	// Для перечислений: печать значений
 	if obj.Type == model.ObjectTypeEnum {
@@ -166,6 +177,27 @@ func (g *MarkdownGenerator) generateContent(obj model.MetadataObject) string {
 			}
 			content.WriteString("\n")
 		}
+		return content.String()
+	}
+
+	// Для критериев отбора: Типы и Состав
+	if obj.Type == model.ObjectTypeFilterCriteria {
+		if len(obj.FilterCriteriaTypes) > 0 {
+			content.WriteString("## Типы\n\n")
+			for _, t := range obj.FilterCriteriaTypes {
+				content.WriteString(fmt.Sprintf("- %s\n", t))
+			}
+			content.WriteString("\n")
+		}
+
+		if len(obj.FilterCriteriaContents) > 0 {
+			content.WriteString("## Состав\n\n")
+			for _, c := range obj.FilterCriteriaContents {
+				content.WriteString(fmt.Sprintf("- %s\n", c))
+			}
+			content.WriteString("\n")
+		}
+
 		return content.String()
 	}
 

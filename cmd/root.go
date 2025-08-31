@@ -37,7 +37,8 @@ var rootCmd = &cobra.Command{
   - informationregisters (регистры сведений)
   - enums (перечисления)
   - chartsofcharacteristictypes (планы видов характеристик)
-  - constants (константы)`,
+  - constants (константы)
+  - filtercriterias (критерии отбора)`,
 	Args: cobra.ExactArgs(2),
 	RunE: runConversion,
 }
@@ -52,8 +53,8 @@ func init() {
 	rootCmd.Flags().StringVar(&formatFlag, "format", "",
 		"Принудительное указание формата (cfg/edt), по умолчанию автоопределение")
 
-	rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes,constants",
-		"Типы объектов для обработки, разделенные запятыми (documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes,constants)")
+	rootCmd.Flags().StringVar(&typesFlag, "types", "documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes,constants,filtercriterias",
+		"Типы объектов для обработки, разделенные запятыми (documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes,constants,filtercriterias)")
 
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false,
 		"Подробный вывод процесса обработки")
@@ -142,6 +143,8 @@ func parseObjectTypes(typesStr string) ([]model.ObjectType, error) {
 			objectTypes = append(objectTypes, model.ObjectTypeChartOfCharacteristicTypes)
 		case "constants":
 			objectTypes = append(objectTypes, model.ObjectTypeConstant)
+		case "filtercriterias":
+			objectTypes = append(objectTypes, model.ObjectTypeFilterCriteria)
 		default:
 			return nil, fmt.Errorf("неподдерживаемый тип объекта: %s", typeName)
 		}

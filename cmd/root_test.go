@@ -94,7 +94,7 @@ func captureOutput(f func()) (string, error) {
 
 	f()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = old
 
 	var buf bytes.Buffer
@@ -191,7 +191,7 @@ func TestRootCmd_Scenarios(t *testing.T) {
 				if err := os.WriteFile(filepath.Join(tmpDir, "Configuration.xml"), []byte(configContent), 0644); err != nil {
 					t.Fatalf("Failed to write dummy config: %v", err)
 				}
-				return tmpDir, func() { os.RemoveAll(tmpDir) }
+				return tmpDir, func() { _ = os.RemoveAll(tmpDir) }
 			},
 			expectError: false,
 			checkOutput: func(t *testing.T, outputDir, stdout string) {
@@ -248,7 +248,7 @@ func TestRootCmd_Scenarios(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(outputDir)
+			defer func() { _ = os.RemoveAll(outputDir) }()
 
 			sourceDir, cleanup := tc.setup(t)
 			defer cleanup()

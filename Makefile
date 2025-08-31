@@ -1,43 +1,50 @@
-.PHONY: build test clean run-test-edt run-test-cfg
+.PHONY: build test clean run-test-edt run-test-cfg run-edt run-cfg init deps
 
 # Сборка основной программы
 build:
 	go build -o bin/ones-cfg2md .
 
-# Сборка тестовых программ
-build-test:
-	go build -o bin/test-simple tests/test_simple.go
-	go build -o bin/test-edt tests/test_edt_parser.go
-
-# Запуск тестов
+# Запуск всех unit-тестов
 test:
 	go test ./...
 
-# Очистка
+# Очистка артефактов
 clean:
-	rm -rf bin/ test_output/
+	rm -rf bin/ result/ test_output/
 
-# Тест детектора формата
-run-test-simple: build-test
-	./bin/test-simple
+# Запуск тестов парсера EDT (локальные тесты пакета)
+run-test-edt:
+	go test ./pkg/parser -run TestEDT -v
 
-# Тест EDT формата
-run-test-edt: build-test
-	./bin/test-edt
+# Запуск тестов парсера CFG (локальные тесты пакета)
+run-test-cfg:
+	go test ./pkg/parser -run TestCFG -v
 
-# Тест CFG формата
-run-test-cfg: build
-	./bin/ones-cfg2md --format=cfg --verbose ./examples/cfg ./test_output_cfg
+# Пример запуска основного бинаря для CFG/EDT на фикстурах
+run-cfg: build
+	./bin/ones-cfg2md --format=cfg --verbose ./fixtures/input/cfg ./result/cfg
 
-# Тест EDT формата через основную программу
 run-edt: build
-	./bin/ones-cfg2md --format=edt --verbose ./examples/edt ./test_output_edt
+	./bin/ones-cfg2md --format=edt --verbose ./fixtures/input/edt ./result/edt
 
 # Установка зависимостей
 deps:
 	go mod tidy
 	go mod download
 
-# Инициализация
+# Инициализация рабочего окружения
 init: deps
-	mkdir -p bin
+	mkdir -p bin result
+
+# Форматирование исходников
+fmt:
+	gofmt -s -w .
+
+# Lint (использует golangci-lint, если установлен; fallback -> go vet)
+lint:
+	@command -v golangci-lint >/dev/null 2>&1 || echo "golangci-lint not found: fallback to 'go vet'"
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run ./...; \
+	else \
+		go vet ./...; \
+	fi

@@ -50,13 +50,13 @@ go build -o bin/ones-cfg2md .
 
 ```bash
 # Обработка примера EDT формата
-./bin/ones-cfg2md ./examples/edt ./output_edt
+ones-cfg2md ./fixtures/input/edt ./result/edt
 
 # Обработка примера CFG формата  
-./bin/ones-cfg2md ./examples/cfg ./output_cfg
+ones-cfg2md ./fixtures/input/cfg ./result/cfg
 
 # Только документы с подробным выводом
-./bin/ones-cfg2md --types=documents --verbose ./examples/edt ./docs
+nes-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
 ```
 
 ## Структура выходных файлов

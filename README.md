@@ -44,13 +44,13 @@ documents,catalogs,accumulationregisters,informationregisters,enums,chartsofchar
 ```bash
 # Клонируем репозиторий
 git clone <repository-url>
-cd ones-cfg2md
+cd onec-cfg2md
 
 # Устанавливаем зависимости
 go mod tidy
 
 # Собираем программу
-go build -o bin/ones-cfg2md .
+go build -o bin/onec-cfg2md .
 ```
 
 ## Использование
@@ -59,13 +59,13 @@ go build -o bin/ones-cfg2md .
 
 ```bash
 # Автоопределение формата и обработка всех документов
-./bin/ones-cfg2md ./src ./output
+./bin/onec-cfg2md ./src ./output
 
 # Принудительное указание формата
-./bin/ones-cfg2md --format=edt ./edt-project ./docs
+./bin/onec-cfg2md --format=edt ./edt-project ./docs
 
 # Обработка только документов в подробном режиме
-./bin/ones-cfg2md --format=cfg --types=documents --verbose ./cfg ./docs
+./bin/onec-cfg2md --format=cfg --types=documents --verbose ./cfg ./docs
 ```
 
 ### Параметры
@@ -78,13 +78,13 @@ go build -o bin/ones-cfg2md .
 
 ```bash
 # Обработка примера EDT формата
-ones-cfg2md ./fixtures/input/edt ./result/edt
+onec-cfg2md ./fixtures/input/edt ./result/edt
 
 # Обработка примера CFG формата  
-ones-cfg2md ./fixtures/input/cfg ./result/cfg
+onec-cfg2md ./fixtures/input/cfg ./result/cfg
 
 # Только документы с подробным выводом
-ones-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
+onec-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
 ```
 
 ## Структура выходных файлов

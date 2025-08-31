@@ -13,6 +13,9 @@ type MetadataObject struct {
 	Resources  []Attribute `json:"resources"`
 	// Для перечислений: значения перечисления (Name + Synonym)
 	EnumValues []EnumValue `json:"enum_values"`
+	// Для критериев отбора: типы и состав (content)
+	FilterCriteriaTypes    []string `json:"filter_criteria_types"`
+	FilterCriteriaContents []string `json:"filter_criteria_contents"`
 }
 
 // EnumValue представляет значение перечисления
@@ -32,6 +35,7 @@ const (
 	ObjectTypeAccumulationRegister       ObjectType = "AccumulationRegister"
 	ObjectTypeInformationRegister        ObjectType = "InformationRegister"
 	ObjectTypeConstant                   ObjectType = "Constant"
+	ObjectTypeFilterCriteria             ObjectType = "FilterCriteria"
 )
 
 // Attribute представляет реквизит объекта

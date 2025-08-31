@@ -570,6 +570,12 @@ func (p *CFGParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, consts...)
+		case model.ObjectTypeFilterCriteria:
+			fcs, err := p.ParseFilterCriteria()
+			if err != nil {
+				return nil, err
+			}
+			allObjects = append(allObjects, fcs...)
 		}
 	}
 
@@ -692,6 +698,237 @@ func (p *CFGParser) parseConstantFile(filePath string) (model.MetadataObject, er
 	return obj, nil
 }
 
+// ParseFilterCriteria парсит критерии отбора в CFG формате
+func (p *CFGParser) ParseFilterCriteria() ([]model.MetadataObject, error) {
+	fcPath := filepath.Join(p.sourcePath, "FilterCriteria")
+	if _, err := os.Stat(fcPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	var result []model.MetadataObject
+	err := filepath.Walk(fcPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(strings.ToLower(info.Name()), ".xml") {
+			return nil
+		}
+		obj, perr := p.parseFilterCriteriaFile(path)
+		if perr != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга критерия отбора %s: %v\n", path, perr)
+			return nil
+		}
+		result = append(result, obj)
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ошибка сканирования каталога критериев отбора: %w", err)
+	}
+	return result, nil
+}
+
+// parseFilterCriteriaFile парсит отдельный XML файл критерия отбора
+func (p *CFGParser) parseFilterCriteriaFile(filePath string) (model.MetadataObject, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
+	}
+
+	type cfgFilter struct {
+		XMLName xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
+		Filter  struct {
+			Properties   CFGProperties   `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+			ChildObjects CFGChildObjects `xml:"http://v8.1c.ru/8.3/MDClasses ChildObjects"`
+		} `xml:"http://v8.1c.ru/8.3/MDClasses FilterCriteria"`
+	}
+
+	var cf cfgFilter
+	if err := xml.Unmarshal(data, &cf); err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML %s: %w", filePath, err)
+	}
+
+	name := cf.Filter.Properties.Name
+	syn := p.extractSynonym(cf.Filter.Properties.Synonym)
+
+	// If the file uses singular FilterCriterion element (fixture), try parsing that too
+	if name == "" {
+		type cfgFilterSingular struct {
+			XMLName xml.Name `xml:"http://v8.1c.ru/8.3/MDClasses MetaDataObject"`
+			Filter  struct {
+				Properties CFGProperties `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+			} `xml:"http://v8.1c.ru/8.3/MDClasses FilterCriterion"`
+		}
+		var cfs cfgFilterSingular
+		if err := xml.Unmarshal(data, &cfs); err == nil {
+			name = cfs.Filter.Properties.Name
+			syn = p.extractSynonym(cfs.Filter.Properties.Synonym)
+		}
+	}
+
+	obj := model.MetadataObject{
+		Type:    model.ObjectTypeFilterCriteria,
+		Name:    name,
+		Synonym: syn,
+	}
+
+	// Критерии отбора не имеют реквизитов в нашей модели — пропускаем ChildObjects
+
+	// Попытка извлечь Type из Properties (если он присутствует)
+	// Для CFG мы попробуем распарсить Type внутри Properties при необходимости
+	type probe struct {
+		Filter struct {
+			Properties struct {
+				Type CFGType `xml:"http://v8.1c.ru/8.3/MDClasses Type"`
+			} `xml:"http://v8.1c.ru/8.3/MDClasses Properties"`
+		} `xml:"http://v8.1c.ru/8.3/MDClasses FilterCriteria"`
+	}
+	var pr probe
+	if err := xml.Unmarshal(data, &pr); err == nil {
+		if len(pr.Filter.Properties.Type.Types) > 0 || len(pr.Filter.Properties.Type.TypeSets) > 0 {
+			types := p.extractTypes(pr.Filter.Properties.Type)
+			obj.FilterCriteriaTypes = p.typeConverter.ConvertTypes(types)
+		}
+	}
+
+	// Если probe не нашёл типов, попробуем более гибко извлечь содержимое элемента <Type> в любом пространстве имён
+	if len(obj.FilterCriteriaTypes) == 0 {
+		if vals := p.extractTypeValuesFromXML(data); len(vals) > 0 {
+			// Убираем префиксы и конвертируем
+			for _, v := range vals {
+				v = strings.TrimSpace(v)
+				v = strings.TrimPrefix(v, "cfg:")
+				v = strings.TrimPrefix(v, "v8:")
+				if v != "" {
+					obj.FilterCriteriaTypes = append(obj.FilterCriteriaTypes, v)
+				}
+			}
+			if len(obj.FilterCriteriaTypes) > 0 {
+				obj.FilterCriteriaTypes = p.typeConverter.ConvertTypes(obj.FilterCriteriaTypes)
+			}
+		}
+	}
+
+	// Попытка извлечь Content элементов, если они присутствуют в файле
+	// В CFG это редкость, но оставим поддержку
+	// Попытка извлечь Content элементов, поддерживаем разные вложенные имена и пространства имён
+	type contentAny struct {
+		Filter struct {
+			Content struct {
+				Items []struct {
+					Value string `xml:",chardata"`
+				} `xml:",any"`
+			} `xml:"Content"`
+		} `xml:"http://v8.1c.ru/8.3/MDClasses FilterCriteria"`
+	}
+	var ca contentAny
+	if err := xml.Unmarshal(data, &ca); err == nil && len(ca.Filter.Content.Items) > 0 {
+		for _, it := range ca.Filter.Content.Items {
+			if it.Value != "" {
+				obj.FilterCriteriaContents = append(obj.FilterCriteriaContents, NormalizeFilterContentItem(it.Value))
+			}
+		}
+	} else {
+		// try singular FilterCriterion path
+		type contentAnySingular struct {
+			Filter struct {
+				Content struct {
+					Items []struct {
+						Value string `xml:",chardata"`
+					} `xml:",any"`
+				} `xml:"Content"`
+			} `xml:"http://v8.1c.ru/8.3/MDClasses FilterCriterion"`
+		}
+		var cas contentAnySingular
+		if err := xml.Unmarshal(data, &cas); err == nil && len(cas.Filter.Content.Items) > 0 {
+			for _, it := range cas.Filter.Content.Items {
+				if it.Value != "" {
+					obj.FilterCriteriaContents = append(obj.FilterCriteriaContents, NormalizeFilterContentItem(it.Value))
+				}
+			}
+		}
+	}
+
+	// If still empty, try a generic XML token walk to extract Content/Item char data
+	if len(obj.FilterCriteriaContents) == 0 {
+		if vals := p.extractContentValuesFromXML(data); len(vals) > 0 {
+			for _, v := range vals {
+				obj.FilterCriteriaContents = append(obj.FilterCriteriaContents, NormalizeFilterContentItem(v))
+			}
+		}
+	}
+
+	return obj, nil
+}
+
+// extractTypeValuesFromXML tries to find <Type> element text anywhere in the XML (any namespace)
+func (p *CFGParser) extractTypeValuesFromXML(data []byte) []string {
+	dec := xml.NewDecoder(strings.NewReader(string(data)))
+	var results []string
+
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			break
+		}
+		switch se := tok.(type) {
+		case xml.StartElement:
+			if se.Name.Local == "Type" {
+				// Collect any character data inside this <Type> element.
+				// It may contain a nested <v8:Type> element, so we iterate tokens
+				// until we reach the corresponding EndElement.
+				var sb strings.Builder
+				for {
+					innerTok, ierr := dec.Token()
+					if ierr != nil {
+						break
+					}
+					switch it := innerTok.(type) {
+					case xml.CharData:
+						s := strings.TrimSpace(string(it))
+						if s != "" {
+							if sb.Len() > 0 {
+								sb.WriteByte(' ')
+							}
+							sb.WriteString(s)
+						}
+					case xml.StartElement:
+						// If nested element (like v8:Type) contains char data, decode it directly
+						if it.Name.Local == "Type" {
+							var inner string
+							if err2 := dec.DecodeElement(&inner, &it); err2 == nil {
+								inner = strings.TrimSpace(inner)
+								if inner != "" {
+									if sb.Len() > 0 {
+										sb.WriteByte(' ')
+									}
+									sb.WriteString(inner)
+								}
+							}
+						}
+					case xml.EndElement:
+						if it.Name.Local == "Type" {
+							// finished this Type element
+							goto FLUSH
+						}
+					}
+				}
+			FLUSH:
+				v := strings.TrimSpace(sb.String())
+				if v != "" {
+					// split by whitespace in case of multiple values
+					for _, part := range strings.Fields(v) {
+						if strings.TrimSpace(part) != "" {
+							results = append(results, part)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return results
+}
+
 // ParseInformationRegisters парсит регистры сведений в CFG формате
 func (p *CFGParser) ParseInformationRegisters() ([]model.MetadataObject, error) {
 	regsPath := filepath.Join(p.sourcePath, "InformationRegisters")
@@ -723,6 +960,41 @@ func (p *CFGParser) ParseInformationRegisters() ([]model.MetadataObject, error) 
 
 	return regs, nil
 }
+
+// extractContentValuesFromXML walks the XML and collects character data inside Content->Item elements
+func (p *CFGParser) extractContentValuesFromXML(data []byte) []string {
+	dec := xml.NewDecoder(strings.NewReader(string(data)))
+	var results []string
+	var inContent bool
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			break
+		}
+		switch t := tok.(type) {
+		case xml.StartElement:
+			if t.Name.Local == "Content" {
+				inContent = true
+			} else if inContent && (t.Name.Local == "Item" || t.Name.Local == "xr:Item") {
+				// decode inner char data of Item
+				var v string
+				if err := dec.DecodeElement(&v, &t); err == nil {
+					v = strings.TrimSpace(v)
+					if v != "" {
+						results = append(results, v)
+					}
+				}
+			}
+		case xml.EndElement:
+			if t.Name.Local == "Content" {
+				inContent = false
+			}
+		}
+	}
+	return results
+}
+
+// use NormalizeFilterContentItem from normalize.go
 
 // parseInformationRegisterFile парсит один XML файл регистра сведений
 func (p *CFGParser) parseInformationRegisterFile(filePath string) (model.MetadataObject, error) {

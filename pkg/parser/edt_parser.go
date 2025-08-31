@@ -598,6 +598,85 @@ func (p *EDTParser) parseConstantFile(filePath string) (model.MetadataObject, er
 	return obj, nil
 }
 
+// ParseFilterCriteria парсит критерии отбора в EDT (MDO) структуре
+func (p *EDTParser) ParseFilterCriteria() ([]model.MetadataObject, error) {
+	fcPath := filepath.Join(p.sourcePath, "src", "FilterCriteria")
+	if _, err := os.Stat(fcPath); os.IsNotExist(err) {
+		return []model.MetadataObject{}, nil
+	}
+
+	entries, err := os.ReadDir(fcPath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка чтения каталога критериев отбора: %w", err)
+	}
+
+	var result []model.MetadataObject
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		mdoFile := filepath.Join(fcPath, name, name+".mdo")
+		if _, err := os.Stat(mdoFile); os.IsNotExist(err) {
+			continue
+		}
+		obj, perr := p.parseFilterCriteriaFile(mdoFile)
+		if perr != nil {
+			fmt.Printf("Предупреждение: ошибка парсинга критерия отбора %s: %v\n", name, perr)
+			continue
+		}
+		result = append(result, obj)
+	}
+	return result, nil
+}
+
+// parseFilterCriteriaFile парсит MDO файл критерия отбора
+func (p *EDTParser) parseFilterCriteriaFile(filePath string) (model.MetadataObject, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка чтения файла %s: %w", filePath, err)
+	}
+
+	// Структура для парсинга критерия отбора с учётом полей type и content
+	type edtFilter struct {
+		XMLName xml.Name   `xml:"http://g5.1c.ru/v8/dt/metadata/mdclass FilterCriterion"`
+		Name    string     `xml:"name"`
+		Synonym EDTSynonym `xml:"synonym"`
+		Type    struct {
+			Types []string `xml:"types"`
+		} `xml:"type"`
+		Content    []string       `xml:"content"`
+		Attributes []EDTAttribute `xml:"attributes"`
+	}
+
+	var ef edtFilter
+	if err := xml.Unmarshal(data, &ef); err != nil {
+		return model.MetadataObject{}, fmt.Errorf("ошибка парсинга XML %s: %w", filePath, err)
+	}
+
+	obj := model.MetadataObject{
+		Type:    model.ObjectTypeFilterCriteria,
+		Name:    ef.Name,
+		Synonym: ef.Synonym.Value,
+	}
+
+	// Типы критерия
+	if len(ef.Type.Types) > 0 {
+		obj.FilterCriteriaTypes = p.typeConverter.ConvertTypes(ef.Type.Types)
+	}
+
+	// Состав (content)
+	if len(ef.Content) > 0 {
+		for _, c := range ef.Content {
+			obj.FilterCriteriaContents = append(obj.FilterCriteriaContents, NormalizeFilterContentItem(c))
+		}
+	}
+
+	// В EDT критерии отбора не содержат реквизитов/атрибутов, пропускаем
+
+	return obj, nil
+}
+
 // parseInformationRegisterFile парсит отдельный MDO файл регистра сведений
 func (p *EDTParser) parseInformationRegisterFile(filePath string) (model.MetadataObject, error) {
 	data, err := os.ReadFile(filePath)
@@ -703,6 +782,12 @@ func (p *EDTParser) ParseObjectsByType(objectTypes []model.ObjectType) ([]model.
 				return nil, err
 			}
 			allObjects = append(allObjects, consts...)
+		case model.ObjectTypeFilterCriteria:
+			fcs, err := p.ParseFilterCriteria()
+			if err != nil {
+				return nil, err
+			}
+			allObjects = append(allObjects, fcs...)
 		}
 	}
 

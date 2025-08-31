@@ -1,4 +1,8 @@
-# ones-cfg2md
+# onec-cfg2md
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/pravets/onec-cfg2md?utm_source=oss&utm_medium=github&utm_campaign=pravets%2Fonec-cfg2md&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+![License](https://img.shields.io/github/license/pravets/onec-cfg2md)
+[![Telegram](https://telegram-badge.vercel.app/api/telegram-badge?channelId=@pravets_IT)](https://t.me/pravets_it)
 
 Конвертер метаданных конфигурации 1С в формат Markdown для использования в Model Context Protocol (MCP).
 
@@ -56,7 +60,7 @@ ones-cfg2md ./fixtures/input/edt ./result/edt
 ones-cfg2md ./fixtures/input/cfg ./result/cfg
 
 # Только документы с подробным выводом
-nes-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
+ones-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
 ```
 
 ## Структура выходных файлов
@@ -97,7 +101,6 @@ nes-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
 
 ```bash
 make build       # Основная программа
-make build-test  # Тестовая программа
 ```
 
 ### Тестирование
@@ -111,14 +114,16 @@ make run-test-cfg   # Тест CFG формата
 ### Структура проекта
 
 ```
-├── cmd/                 # CLI интерфейс
+├── main.go              # точка входа (вызов CLI)
+├── cmd/                 # реализация CLI (cobra-команды)
 ├── pkg/
-│   ├── detector/        # Определение формата
-│   ├── parser/          # Парсеры CFG/EDT
-│   ├── model/           # Модели данных
-│   └── generator/       # Генераторы MD/CSV
-├── examples/            # Примеры метаданных
-└── docs/               # Документация
+│   ├── detector/        # определение формата (CFG/EDT)
+│   ├── generator/       # генераторы Markdown и CSV
+│   ├── model/           # модель метаданных (MetadataObject и пр.)
+│   ├── parser/          # парсеры CFG и EDT (cfg_parser.go, edt_parser.go) 
+│   └── testutil/        # вспомогательные модули для тестов
+├── fixtures/            # тестовые фикстуры (input/ и output/)
+└── docs/                # техническая документация
 ```
 
 ## Техническое задание

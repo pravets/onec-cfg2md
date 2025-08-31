@@ -1,15 +1,15 @@
-## Быстрая инструкция для AI-агента (ones-cfg2md)
+## Быстрая инструкция для AI-агента (onec-cfg2md)
 
 Цель: помогать разработчикам конвертировать метаданные 1С (CFG/EDT) в Markdown и CSV; проект написан на Go.
 
 Кратко — что важно знать
-- Проект: CLI-приложение `ones-cfg2md` с точкой входа в `main.go` и командой в `cmd/root.go`.
+- Проект: CLI-приложение `onec-cfg2md` с точкой входа в `main.go` и командой в `cmd/root.go`.
 - Парсеры: `pkg/parser` содержит два парсера — CFG (`CFGParser`) и EDT (`EDTParser`) — с общим методом `ParseObjectsByType`.
 - Модель: `pkg/model` содержит тип `MetadataObject` и `ObjectType` (строковые константы), используемые по всему коду.
 - Генераторы: `pkg/generator` реализует `MarkdownGenerator` и `CSVGenerator` с методами `GenerateFiles` / `GenerateCatalog`.
 
 Архитектура и потоки данных (big picture)
-- Вход: вызов CLI `ones-cfg2md <source> <output>` (см. `cmd/root.go`).
+- Вход: вызов CLI `onec-cfg2md <source> <output>` (см. `cmd/root.go`).
 - Детектор формата (`pkg/detector`) решает CFG или EDT. `cmd` формирует `model.ConversionOptions`.
 - Парсер создаётся через `parser.NewParser(sourcePath, format)`; затем вызывается `ParseObjectsByType([]model.ObjectType)` — возвращает []model.MetadataObject.
 - Генераторы (`generator.NewMarkdownGenerator`, `generator.NewCSVGenerator`) принимают список объектов и записывают файлы в `outputPath`.
@@ -26,7 +26,7 @@
 - Локализация: в именах и содержимом Markdown используются русские названия типов (`Документ`, `Справочник` и т.д.). При генерации имён файлов используется шаблон `<РусскийТип>_<Name>.md`.
 
 Билд, тесты и полезные команды
-- Сборка: `make build` или `go build -o bin/ones-cfg2md .`.
+- Сборка: `make build` или `go build -o bin/onec-cfg2md .`.
 - Тесты: `make test` или `go test ./...`. Для запуска конкретных тестов: `go test ./pkg/generator -run TestGenerateContent_EdgeCases -v`.
 - Быстрые сценарии из Makefile: `make run-test-cfg` (запуск конвертации с фикстами), `make run-test-edt`.
 

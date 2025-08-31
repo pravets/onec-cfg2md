@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 // CSVGenerator генератор CSV каталога объектов
@@ -34,7 +34,7 @@ func (g *CSVGenerator) GenerateCatalog(objects []model.MetadataObject) error {
 	if err != nil {
 		return fmt.Errorf("ошибка создания CSV файла %s: %w", csvPath, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	writer := csv.NewWriter(file)
 	writer.Comma = ';' // Используем точку с запятой как разделитель

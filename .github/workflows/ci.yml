@@ -33,14 +33,14 @@ jobs:
         run: |
           mkdir -p dist
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            GOOS=windows GOARCH=${{ matrix.goarch }} go build -v -o dist/ones-cfg2md_windows_${{ matrix.goarch }}.exe ./
+            GOOS=windows GOARCH=${{ matrix.goarch }} go build -v -o dist/onec-cfg2md_windows_${{ matrix.goarch }}.exe ./
           else
-            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o dist/ones-cfg2md_linux_${{ matrix.goarch }} ./
+            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o dist/onec-cfg2md_linux_${{ matrix.goarch }} ./
           fi
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ones-cfg2md-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: onec-cfg2md-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
 
   release:
@@ -65,9 +65,9 @@ jobs:
         run: |
           mkdir -p dist
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            GOOS=windows GOARCH=${{ matrix.goarch }} go build -v -o dist/ones-cfg2md_windows_amd64.exe ./
+            GOOS=windows GOARCH=${{ matrix.goarch }} go build -v -o dist/onec-cfg2md_windows_amd64.exe ./
           else
-            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o dist/ones-cfg2md_linux_amd64 ./
+            GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o dist/onec-cfg2md_linux_amd64 ./
           fi
       - name: Publish release assets
         uses: softprops/action-gh-release@v1

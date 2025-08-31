@@ -2,9 +2,9 @@ package generator
 
 import (
 	"fmt"
-	"ones-cfg2md/pkg/model"
-	"ones-cfg2md/pkg/parser"
-	"ones-cfg2md/pkg/testutil"
+	"onec-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/parser"
+	"onec-cfg2md/pkg/testutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -92,7 +92,7 @@ func TestGenerateFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(outputDir)
+	defer func() { _ = os.RemoveAll(outputDir) }()
 
 	// 3. Run the generator
 	g := NewMarkdownGenerator(outputDir)
@@ -128,7 +128,7 @@ func TestGenerateFiles_EmptyInput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(outputDir)
+	defer func() { _ = os.RemoveAll(outputDir) }()
 
 	g := NewMarkdownGenerator(outputDir)
 	if err := g.GenerateFiles([]model.MetadataObject{}); err != nil {
@@ -151,7 +151,7 @@ func TestGenerateFiles_MkdirError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
 	if err := tmpFile.Close(); err != nil {
 		t.Fatalf("Failed to close temp file: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestGenerateFiles_WriteFileError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(outputDir)
+	defer func() { _ = os.RemoveAll(outputDir) }()
 
 	// Make the directory read-only
 	if err := os.Chmod(outputDir, 0555); err != nil {

@@ -1,4 +1,4 @@
-module ones-cfg2md
+module onec-cfg2md
 
 go 1.21
 

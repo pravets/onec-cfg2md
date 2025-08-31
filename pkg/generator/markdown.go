@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 // MarkdownGenerator генератор Markdown файлов

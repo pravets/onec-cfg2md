@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 // DetectFormat автоматически определяет формат метаданных в указанном каталоге

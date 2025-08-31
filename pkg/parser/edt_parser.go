@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 // EDTParser парсер для EDT формата

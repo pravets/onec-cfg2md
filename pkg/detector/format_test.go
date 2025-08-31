@@ -13,7 +13,7 @@ func TestDetectFormat_CFG(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed create fixture: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 
 	format, err := DetectFormat(dir)
 	if err != nil {
@@ -31,7 +31,7 @@ func TestDetectFormat_EDT(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed create fixture: %v", err)
 	}
-	f.Close()
+	_ = f.Close()
 	if err := os.Mkdir(filepath.Join(dir, "src"), 0755); err != nil {
 		t.Fatalf("failed create src: %v", err)
 	}

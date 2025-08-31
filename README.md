@@ -1,4 +1,8 @@
-# ones-cfg2md
+# onec-cfg2md
+
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/pravets/onec-cfg2md?utm_source=oss&utm_medium=github&utm_campaign=pravets%2Fonec-cfg2md&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+![License](https://img.shields.io/github/license/pravets/onec-cfg2md)
+[![Telegram](https://telegram-badge.vercel.app/api/telegram-badge?channelId=@pravets_IT)](https://t.me/pravets_it)
 
 Конвертер метаданных конфигурации 1С в формат Markdown для использования в Model Context Protocol (MCP).
 
@@ -11,18 +15,42 @@
 - **CFG формат** (Конфигуратор) - файлы XML с Configuration.xml в корне
 - **EDT формат** (Eclipse Development Tools) - файлы MDO с .project и src/ в корне
 
+## Поддерживаемые типы метаданных
+
+Внизу приведена таблица поддерживаемых типов метаданных: русское имя, англоязычный идентификатор (используется в коде) и ключ, который принимает опция `--types`.
+
+| Русское имя | Английский идентификатор | CLI-ключ (`--types`) |
+|---|---:|---:|
+| Документ | `Document` | `documents` |
+| Справочник | `Catalog` | `catalogs` |
+| Перечисление | `Enum` | `enums` |
+| План видов характеристик | `ChartOfCharacteristicTypes` | `chartsofcharacteristictypes` |
+| Регистр накопления | `AccumulationRegister` | `accumulationregisters` |
+| Регистр сведений | `InformationRegister` | `informationregisters` |
+| Константа | `Constant` | `constants` |
+| Критерий отбора | `FilterCriteria` | `filtercriterias` |
+
+Опция `--types` принимает перечисление ключей через запятую. Пример валидного значения:
+
+```
+documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes,constants,filtercriterias
+```
+
+Шаблон имени Markdown-файла: `Тип_Имя.md`, где `Тип` — русское название типа (например, `Документ`, `Справочник`), а `Имя` — системное имя объекта.
+
+
 ## Установка
 
 ```bash
 # Клонируем репозиторий
 git clone <repository-url>
-cd ones-cfg2md
+cd onec-cfg2md
 
 # Устанавливаем зависимости
 go mod tidy
 
 # Собираем программу
-go build -o bin/ones-cfg2md .
+go build -o bin/onec-cfg2md .
 ```
 
 ## Использование
@@ -31,13 +59,13 @@ go build -o bin/ones-cfg2md .
 
 ```bash
 # Автоопределение формата и обработка всех документов
-./bin/ones-cfg2md ./src ./output
+./bin/onec-cfg2md ./src ./output
 
 # Принудительное указание формата
-./bin/ones-cfg2md --format=edt ./edt-project ./docs
+./bin/onec-cfg2md --format=edt ./edt-project ./docs
 
 # Обработка только документов в подробном режиме
-./bin/ones-cfg2md --format=cfg --types=documents --verbose ./cfg ./docs
+./bin/onec-cfg2md --format=cfg --types=documents --verbose ./cfg ./docs
 ```
 
 ### Параметры
@@ -50,13 +78,13 @@ go build -o bin/ones-cfg2md .
 
 ```bash
 # Обработка примера EDT формата
-ones-cfg2md ./fixtures/input/edt ./result/edt
+onec-cfg2md ./fixtures/input/edt ./result/edt
 
 # Обработка примера CFG формата  
-ones-cfg2md ./fixtures/input/cfg ./result/cfg
+onec-cfg2md ./fixtures/input/cfg ./result/cfg
 
 # Только документы с подробным выводом
-nes-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
+onec-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
 ```
 
 ## Структура выходных файлов
@@ -97,7 +125,6 @@ nes-cfg2md --types=documents --verbose ./fixtures/input/edt ./docs
 
 ```bash
 make build       # Основная программа
-make build-test  # Тестовая программа
 ```
 
 ### Тестирование
@@ -111,14 +138,16 @@ make run-test-cfg   # Тест CFG формата
 ### Структура проекта
 
 ```
-├── cmd/                 # CLI интерфейс
+├── main.go              # точка входа (вызов CLI)
+├── cmd/                 # реализация CLI (cobra-команды)
 ├── pkg/
-│   ├── detector/        # Определение формата
-│   ├── parser/          # Парсеры CFG/EDT
-│   ├── model/           # Модели данных
-│   └── generator/       # Генераторы MD/CSV
-├── examples/            # Примеры метаданных
-└── docs/               # Документация
+│   ├── detector/        # определение формата (CFG/EDT)
+│   ├── generator/       # генераторы Markdown и CSV
+│   ├── model/           # модель метаданных (MetadataObject и пр.)
+│   ├── parser/          # парсеры CFG и EDT (cfg_parser.go, edt_parser.go) 
+│   └── testutil/        # вспомогательные модули для тестов
+├── fixtures/            # тестовые фикстуры (input/ и output/)
+└── docs/                # техническая документация
 ```
 
 ## Техническое задание

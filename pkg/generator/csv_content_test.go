@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 func TestGenerateCatalog_Escaping(t *testing.T) {
@@ -31,7 +31,7 @@ func TestGenerateCatalog_Escaping(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open generated csv: %v", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	r := csv.NewReader(f)
 	r.Comma = ';'

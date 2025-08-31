@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 func TestNewParser_ExplicitCFG(t *testing.T) {

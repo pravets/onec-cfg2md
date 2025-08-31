@@ -72,10 +72,10 @@ examples/
 ### CLI
 ```bash
 # Парсинг только справочников
-./ones-cfg2md examples/cfg output/ --types catalogs
+./onec-cfg2md examples/cfg output/ --types catalogs
 
 # Парсинг справочников и документов
-./ones-cfg2md examples/cfg output/ --types catalogs,documents
+./onec-cfg2md examples/cfg output/ --types catalogs,documents
 ```
 
 ### Программно
@@ -103,7 +103,7 @@ catalogs, _ := parser.ParseCatalogs()
 
 ## Результат
 
-Теперь приложение `ones-cfg2md` полностью поддерживает:
+Теперь приложение `onec-cfg2md` полностью поддерживает:
 
 1. ✅ **Документы** (Documents) - CFG и EDT
 2. ✅ **Справочники** (Catalogs) - CFG и EDT  

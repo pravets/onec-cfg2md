@@ -2,8 +2,8 @@ package parser
 
 import (
 	"fmt"
-	"ones-cfg2md/pkg/detector"
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/detector"
+	"onec-cfg2md/pkg/model"
 )
 
 // MetadataParser интерфейс для парсинга метаданных

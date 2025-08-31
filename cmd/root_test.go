@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"io"
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -94,7 +94,7 @@ func captureOutput(f func()) (string, error) {
 
 	f()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = old
 
 	var buf bytes.Buffer
@@ -191,7 +191,7 @@ func TestRootCmd_Scenarios(t *testing.T) {
 				if err := os.WriteFile(filepath.Join(tmpDir, "Configuration.xml"), []byte(configContent), 0644); err != nil {
 					t.Fatalf("Failed to write dummy config: %v", err)
 				}
-				return tmpDir, func() { os.RemoveAll(tmpDir) }
+				return tmpDir, func() { _ = os.RemoveAll(tmpDir) }
 			},
 			expectError: false,
 			checkOutput: func(t *testing.T, outputDir, stdout string) {
@@ -236,7 +236,7 @@ func TestRootCmd_Scenarios(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a new command for each test case to avoid flag redefinition panic
 			cmd := &cobra.Command{
-				Use:  "ones-cfg2md <source_directory> <output_directory>",
+				Use:  "onec-cfg2md <source_directory> <output_directory>",
 				Args: cobra.ExactArgs(2),
 				RunE: runConversion,
 			}
@@ -248,7 +248,7 @@ func TestRootCmd_Scenarios(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			defer os.RemoveAll(outputDir)
+			defer func() { _ = os.RemoveAll(outputDir) }()
 
 			sourceDir, cleanup := tc.setup(t)
 			defer cleanup()

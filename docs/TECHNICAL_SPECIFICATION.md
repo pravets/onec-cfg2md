@@ -107,7 +107,7 @@
 ### 5.1 Основная команда
 
 ```bash
-ones-cfg2md [flags] <source_directory> <output_directory>
+onec-cfg2md [flags] <source_directory> <output_directory>
 ```
 
 ### 5.2 Параметры
@@ -122,13 +122,13 @@ ones-cfg2md [flags] <source_directory> <output_directory>
 
 ```bash
 # Обработка всех объектов с автоопределением формата
-ones-cfg2md ./src ./output
+onec-cfg2md ./src ./output
 
 # Обработка только документов в CFG формате
-ones-cfg2md --format=cfg --types=documents ./cfg ./docs
+onec-cfg2md --format=cfg --types=documents ./cfg ./docs
 
 # Подробный режим
-ones-cfg2md --verbose ./edt-project ./documentation
+onec-cfg2md --verbose ./edt-project ./documentation
 ```
 
 ## 6. Технические требования

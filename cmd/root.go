@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"ones-cfg2md/pkg/detector"
-	"ones-cfg2md/pkg/generator"
-	"ones-cfg2md/pkg/model"
-	"ones-cfg2md/pkg/parser"
+	"onec-cfg2md/pkg/detector"
+	"onec-cfg2md/pkg/generator"
+	"onec-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/parser"
 
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ var (
 
 // rootCmd основная команда
 var rootCmd = &cobra.Command{
-	Use:   "ones-cfg2md <source_directory> <output_directory>",
+	Use:   "onec-cfg2md <source_directory> <output_directory>",
 	Short: "Конвертер метаданных 1С в Markdown",
 	Long: `Программа конвертирует метаданные конфигурации 1С из CFG или EDT формата 
 в документацию Markdown для использования в Model Context Protocol (MCP).

@@ -2,7 +2,7 @@
 
 # Сборка основной программы
 build:
-	go build -o bin/ones-cfg2md .
+	go build -o bin/onec-cfg2md .
 
 # Запуск всех unit-тестов
 test:
@@ -22,10 +22,10 @@ run-test-cfg:
 
 # Пример запуска основного бинаря для CFG/EDT на фикстурах
 run-cfg: build
-	./bin/ones-cfg2md --format=cfg --verbose ./fixtures/input/cfg ./result/cfg
+	./bin/onec-cfg2md --format=cfg --verbose ./fixtures/input/cfg ./result/cfg
 
 run-edt: build
-	./bin/ones-cfg2md --format=edt --verbose ./fixtures/input/edt ./result/edt
+	./bin/onec-cfg2md --format=edt --verbose ./fixtures/input/edt ./result/edt
 
 # Установка зависимостей
 deps:

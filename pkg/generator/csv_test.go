@@ -3,7 +3,7 @@ package generator
 import (
 	"testing"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 func TestCreateCatalogEntry(t *testing.T) {

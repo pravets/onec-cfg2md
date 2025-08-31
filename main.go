@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"ones-cfg2md/cmd"
+	"onec-cfg2md/cmd"
 )
 
 func main() {

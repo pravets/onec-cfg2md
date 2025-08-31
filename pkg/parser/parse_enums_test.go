@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 	"path/filepath"
 	"runtime"
 	"testing"

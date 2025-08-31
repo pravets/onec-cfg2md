@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"ones-cfg2md/pkg/generator"
-	"ones-cfg2md/pkg/model"
-	"ones-cfg2md/pkg/testutil"
+	"onec-cfg2md/pkg/generator"
+	"onec-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/testutil"
 )
 
 func findByName(objs []model.MetadataObject, name string) *model.MetadataObject {

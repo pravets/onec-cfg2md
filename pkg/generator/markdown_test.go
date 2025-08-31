@@ -2,9 +2,9 @@ package generator
 
 import (
 	"fmt"
-	"ones-cfg2md/pkg/model"
-	"ones-cfg2md/pkg/parser"
-	"ones-cfg2md/pkg/testutil"
+	"onec-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/parser"
+	"onec-cfg2md/pkg/testutil"
 	"os"
 	"path/filepath"
 	"strings"

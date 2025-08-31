@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 // CSVGenerator генератор CSV каталога объектов

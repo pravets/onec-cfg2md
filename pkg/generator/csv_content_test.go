@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 )
 
 func TestGenerateCatalog_Escaping(t *testing.T) {

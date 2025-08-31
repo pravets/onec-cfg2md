@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"io"
-	"ones-cfg2md/pkg/model"
+	"onec-cfg2md/pkg/model"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -236,7 +236,7 @@ func TestRootCmd_Scenarios(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create a new command for each test case to avoid flag redefinition panic
 			cmd := &cobra.Command{
-				Use:  "ones-cfg2md <source_directory> <output_directory>",
+				Use:  "onec-cfg2md <source_directory> <output_directory>",
 				Args: cobra.ExactArgs(2),
 				RunE: runConversion,
 			}

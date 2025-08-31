@@ -15,6 +15,30 @@
 - **CFG формат** (Конфигуратор) - файлы XML с Configuration.xml в корне
 - **EDT формат** (Eclipse Development Tools) - файлы MDO с .project и src/ в корне
 
+## Поддерживаемые типы метаданных
+
+Внизу приведена таблица поддерживаемых типов метаданных: русское имя, англоязычный идентификатор (используется в коде) и ключ, который принимает опция `--types`.
+
+| Русское имя | Английский идентификатор | CLI-ключ (`--types`) |
+|---|---:|---:|
+| Документ | `Document` | `documents` |
+| Справочник | `Catalog` | `catalogs` |
+| Перечисление | `Enum` | `enums` |
+| План видов характеристик | `ChartOfCharacteristicTypes` | `chartsofcharacteristictypes` |
+| Регистр накопления | `AccumulationRegister` | `accumulationregisters` |
+| Регистр сведений | `InformationRegister` | `informationregisters` |
+| Константа | `Constant` | `constants` |
+| Критерий отбора | `FilterCriteria` | `filtercriterias` |
+
+Опция `--types` принимает перечисление ключей через запятую. Пример валидного значения:
+
+```
+documents,catalogs,accumulationregisters,informationregisters,enums,chartsofcharacteristictypes,constants,filtercriterias
+```
+
+Шаблон имени Markdown-файла: `Тип_Имя.md`, где `Тип` — русское название типа (например, `Документ`, `Справочник`), а `Имя` — системное имя объекта.
+
+
 ## Установка
 
 ```bash
